@@ -1,3 +1,17 @@
+# ==============================================
+# 1. IDEA 开发工具相关（绝对不要提交）
+# ==============================================
+.idea/
+*.iml
+*.iws
+*.ipr
+*.log
+*.sublime-project
+*.sublime-workspace
+
+# ==============================================
+# 2. Maven 后端编译产物（target 文件夹）
+# ==============================================
 target/
 pom.xml.tag
 pom.xml.releaseBackup
@@ -7,11 +21,52 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
-# https://maven.apache.org/wrapper/#usage-without-binary-jar
 .mvn/wrapper/maven-wrapper.jar
 
-# Eclipse m2e generated files
-# Eclipse Core
-.project
-# JDT-specific (Eclipse Java Development Tools)
+# ==============================================
+# 3. Eclipse 相关（你当前文件里的，保留）
+# ==============================================
 .classpath
+.project
+.settings/
+bin/
+
+# ==============================================
+# 4. 前端相关（node_modules 绝对不要提交！）
+# ==============================================
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.nuxt/
+frontend/.next/
+out/
+.DS_Store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==============================================
+# 5. 系统文件（Windows / Mac 自动生成的）
+# ==============================================
+Thumbs.db
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# ==============================================
+# 6. 本地环境配置（避免泄露密码/密钥）
+# ==============================================
+application-local.yml
+application-local.properties
+.env
+.env.local
+*.local.properties
+
+# ==============================================
+# 7. 日志文件
+# ==============================================
+logs/
+*.log
