@@ -1,0 +1,19 @@
+# Spring Boot 数据源配置（连接 MySQL）
+spring:
+  datasource:
+    # MySQL 8.0 必须使用 cj 驱动
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 数据库连接URL：地址、库名、编码、时区
+    url: jdbc:mysql://localhost:3306/health_system?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    # 数据库账号（默认root）
+    username: root
+    # 🔴 这里必须改成你自己的 MySQL 密码！
+    password: 321931064
+
+# MyBatis-Plus 配置（现代化ORM，简化开发）
+mybatis-plus:
+  configuration:
+    # 开启下划线转驼峰：数据库字段 create_time → Java 字段 createTime 自动映射
+    map-underscore-to-camel-case: true
+  # 实体类所在包，MyBatis-Plus 自动扫描
+  type-aliases-package: com.health.entity
