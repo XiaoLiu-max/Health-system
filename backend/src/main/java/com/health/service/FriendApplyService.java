@@ -4,12 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.health.entity.Friend;
 import com.health.entity.FriendApply;
 import com.health.entity.Message;
-import com.health.feign.UserFeignClient;
+
 import com.health.mapper.FriendApplyMapper;
 import com.health.mapper.FriendMapper;
 import com.health.mapper.MessageMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
@@ -27,7 +28,7 @@ public class FriendApplyService {
     private MessageMapper messageMapper;
 
     @Resource
-    private UserFeignClient userFeignClient;
+    private RestTemplate restTemplate;
 
     // 发送好友申请
     @Transactional
@@ -44,13 +45,19 @@ public class FriendApplyService {
         }
 
 //         2. 调用队友接口检查用户是否存在
+        // ===================== 队友用户接口地址 =====================
+        String url = "http://localhost:8080" + "/exist/{userId}/" + toUserId;
+
+// 发送请求调用队友
+        Boolean exist;
         try {
-            Boolean exists = userFeignClient.checkUserExist(toUserId);
-            if (exists == null || !exists) {
-                throw new RuntimeException("用户不存在，无法添加");
-            }
+            exist = restTemplate.getForObject(url, Boolean.class);
         } catch (Exception e) {
-             throw new RuntimeException("用户服务异常，请稍后再试");
+            throw new RuntimeException("连接队友用户服务失败，请检查队友服务是否启动");
+        }
+
+        if (exist == null || !exist) {
+            throw new RuntimeException("用户不存在");
         }
 
         // 3. 判断是否已经是好友
