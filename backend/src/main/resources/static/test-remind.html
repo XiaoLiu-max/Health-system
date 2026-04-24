@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>一次性测试全部5个接口</title>
+</head>
+<body>
+<h2>全自动测试：新增 + 查询 + 详情 + 修改 + 删除</h2>
+<button onclick="testAllApi()">开始测试全部接口</button>
+<div id="log" style="margin-top:20px; white-space: pre-wrap;"></div>
+
+<script>
+    let log = (msg) => {
+        document.getElementById("log").innerHTML += msg + "\n";
+    };
+
+    async function testAllApi() {
+        log("===== 开始测试全部接口 =====");
+
+        // 1. 新增
+        let add = await fetch("/remind/add", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                content: "全自动测试",
+                remindTime: "2026-04-17T20:00:00",
+                repeatType: 1,
+                status: 1
+            })
+        });
+        log("1. 新增接口：" + await add.text());
+
+        // 2. 查询全部
+        let list = await fetch("/remind/list");
+        log("2. 查询全部：返回 " + (await list.json()).length + " 条数据");
+
+        // 3. 根据ID查询
+        let get = await fetch("/remind/1");
+        log("3. 根据ID查询：" + await get.text());
+
+        // 4. 修改
+        let update = await fetch("/remind/update", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                id: 1,
+                content: "修改后的测试",
+                remindTime: "2026-04-17T21:00:00",
+                repeatType: 2,
+                status: 1
+            })
+        });
+        log("4. 修改接口：" + await update.text());
+
+        // 5. 删除
+        let del = await fetch("/remind/delete/1", { method: "DELETE" });
+        log("5. 删除接口：" + await del.text());
+
+        log("===== 全部接口测试完成 ✅ =====");
+    }
+</script>
+</body>
+</html>

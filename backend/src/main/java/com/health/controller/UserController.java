@@ -237,5 +237,5 @@ public class UserController {
         boolean exist = userService.isUserExist(userId);
         return Result.success(exist);
     }
-    
+
 }
