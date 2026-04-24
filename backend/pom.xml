@@ -58,6 +58,20 @@
             <optional>true</optional>
         </dependency>
 
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- JWT 依赖（生成 Token） -->
+        <!-- JWT 依赖（稳定版，国内仓库必能下载） -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt</artifactId>
+            <version>0.9.1</version>
+        </dependency>
+
         <!-- 测试（不变） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

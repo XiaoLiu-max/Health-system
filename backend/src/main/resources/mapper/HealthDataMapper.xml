@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.health.mapper.HealthDataMapper">
+
+    <!-- 1. 根据用户ID + 日期查询 -->
+    <select id="selectByUserIdAndDate" resultType="com.health.entity.HealthData">
+        SELECT * FROM health_data
+        WHERE user_id = #{userId} AND record_date = #{recordDate}
+    </select>
+
+    <!-- 2. 查询用户所有历史记录 -->
+    <select id="selectAllByUserId" resultType="com.health.entity.HealthData">
+        SELECT * FROM health_data
+        WHERE user_id = #{userId}
+        ORDER BY record_date DESC
+    </select>
+
+    <!-- 3. 按时间区间查询（折线图） -->
+    <select id="selectByDateRange" resultType="com.health.entity.HealthData">
+        SELECT * FROM health_data
+        WHERE user_id = #{userId}
+        AND record_date BETWEEN #{start} AND #{end}
+        ORDER BY record_date ASC
+    </select>
+
+</mapper>
