@@ -158,4 +158,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         updateById(user);
     }
 
+    @Override
+    public boolean isUserExist(Long userId) {
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getId, userId);
+
+        //  count = 查有没有这个用户
+        long count = baseMapper.selectCount(wrapper);
+
+        return count > 0;
+    }
+
 }

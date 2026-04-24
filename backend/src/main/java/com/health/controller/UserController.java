@@ -232,4 +232,10 @@ public class UserController {
         return Result.success("账号注销成功，该账号已永久删除");
     }
 
+    @GetMapping("/exist/{userId}")
+    public Result isUserExist(@PathVariable Long userId) {
+        boolean exist = userService.isUserExist(userId);
+        return Result.success(exist);
+    }
+    
 }
