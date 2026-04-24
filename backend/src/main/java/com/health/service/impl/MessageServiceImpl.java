@@ -1,6 +1,6 @@
 package com.health.service.impl;
 
-import com.health.service.MessageServices;
+import com.health.service.MessageService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
  * 后续队友补全消息入库、前端推送逻辑即可，当前框架预留完毕
  */
 @Service
-public class MessageServiceImpl implements MessageServices {
+public class MessageServiceImpl implements MessageService {
 
     @Override
     public void sendHealthWarn(Long userId, String warnContent, String advice) {

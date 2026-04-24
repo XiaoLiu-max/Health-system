@@ -100,7 +100,7 @@ import com.health.entity.HealthData;
 import com.health.entity.User;
 import com.health.mapper.HealthDataMapper;
 import com.health.service.HealthDataService;
-import com.health.service.MessageServices;
+import com.health.service.MessageService;
 import com.health.service.UserService;
 import com.health.utils.HealthCheckUtil;
 import org.springframework.stereotype.Service;
@@ -118,7 +118,7 @@ public class HealthDataServiceImpl extends ServiceImpl<HealthDataMapper, HealthD
     private UserService userService;
 
     @Resource
-    private MessageServices messageService;
+    private MessageService messageService;
 
     @Resource
     private HealthDataMapper healthDataMapper;
