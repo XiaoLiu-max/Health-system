@@ -64,7 +64,7 @@ application-local.properties
 .env
 .env.local
 *.local.properties
-src/main/resources/application.yml
+application.yml
 # ==============================================
 # 7. 日志文件
 # ==============================================

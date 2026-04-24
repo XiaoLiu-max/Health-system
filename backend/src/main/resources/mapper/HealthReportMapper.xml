@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.health.mapper.HealthReportMapper">
+
+    <!-- 根据用户ID、报表类型，查询最新的一条报表 -->
+    <select id="selectLatestByUserIdAndType" resultType="com.health.entity.HealthReport">
+        SELECT * FROM health_report
+        WHERE user_id = #{userId}
+        AND report_type = #{reportType}
+        ORDER BY end_date DESC
+        LIMIT 1
+    </select>
+
+</mapper>

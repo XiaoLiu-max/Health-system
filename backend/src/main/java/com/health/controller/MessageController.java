@@ -1,7 +1,7 @@
 package com.health.controller;
 
 import com.health.entity.Message;
-import com.health.service.MessageService;
+import com.health.service.MessageServices;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,7 +17,7 @@ import java.util.Map;
 public class MessageController {
 
     @Resource
-    private MessageService messageService;
+    private MessageServices messageService;
 
     // 1. 查询当前用户全部消息
     @GetMapping("/list")
