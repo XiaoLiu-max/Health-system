@@ -40,4 +40,16 @@ public class FriendOnlineService {
             friendOnlineMapper.updateById(online);
         }
     }
+
+    // 退出登录时同步为离线
+    public void logoutSyncOffline(Long userId) {
+        FriendOnline online = getFriendOnlineInfo(userId);
+
+        if (online != null) {
+            online.setOnlineStatus(0); // 0=离线
+            online.setLastTime(LocalDateTime.now());
+            friendOnlineMapper.updateById(online);
+        }
+    }
+
 }
