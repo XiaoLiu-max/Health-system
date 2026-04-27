@@ -37,4 +37,9 @@ public class Result<T> {
         r.setMsg(msg);
         return r;
     }
+
+    public boolean isSuccess(){
+        return this.code == 200;
+    }
+
 }

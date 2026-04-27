@@ -1,22 +1,31 @@
 package com.health.service.impl;
 
+import com.health.entity.Message;
+import com.health.mapper.MessageMapper;
 import com.health.service.MessageService;
 import org.springframework.stereotype.Service;
 
-/**
- * 消息提醒实现类
- * 后续队友补全消息入库、前端推送逻辑即可，当前框架预留完毕
- */
+import javax.annotation.Resource;
+import java.time.LocalDateTime;
+
 @Service
 public class MessageServiceImpl implements MessageService {
 
+    @Resource
+    private MessageMapper messageMapper;
+
     @Override
     public void sendHealthWarn(Long userId, String warnContent, String advice) {
-        // ===================== 队友后续在这里补全代码 =====================
-        // 功能：消息存入数据库、用户消息通知、前端弹窗提醒
-        // 当前仅预留接口，保证你原有业务调用完全正常、不报错
-        System.out.println("【健康异常提醒】用户ID："+userId);
-        System.out.println("异常内容："+warnContent);
-        System.out.println("健康建议："+advice);
+        Message message = new Message();
+        message.setFromUid(0L);
+        message.setToUid(userId);
+        // 没有title字段 → 合并到内容
+        String fullContent = warnContent + "：" + advice;
+        message.setContent(fullContent);
+        message.setIsRead(0);
+        message.setCreateTime(LocalDateTime.now());
+
+        messageMapper.insert(message);
+        System.out.println("✅ 系统消息发送成功：" + fullContent);
     }
 }

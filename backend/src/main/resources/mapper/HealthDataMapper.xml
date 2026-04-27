@@ -24,4 +24,9 @@
         ORDER BY record_date ASC
     </select>
 
+    <select id="selectTodayData" resultType="com.health.entity.HealthData">
+        SELECT * FROM health_data
+        WHERE DATE(create_time) = #{today}
+    </select>
+
 </mapper>

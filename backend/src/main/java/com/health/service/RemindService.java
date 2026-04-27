@@ -14,6 +14,9 @@ public class RemindService {
     @Resource
     private RemindMapper remindMapper;
 
+    @Resource
+    private MessageServices messageServices;
+
     // 新增提醒（默认待提醒 status=0）
     public boolean addRemind(Remind remind) {
         remind.setStatus(0);
@@ -40,19 +43,23 @@ public class RemindService {
         return remindMapper.deleteById(id) > 0;
     }
 
-    // ===================== 核心业务：查询我的提醒（筛选+排序） =====================
-    public List<Remind> getMyReminds(Integer status) {
+    // ===================== 【改动 1】查询我的提醒（必须传 userId） =====================
+    public List<Remind> getMyReminds(Long userId, Integer status) {
         LambdaQueryWrapper<Remind> wrapper = new LambdaQueryWrapper<>();
+
+        // 只查当前登录用户的提醒 → 最重要！
+        wrapper.eq(Remind::getUserId, userId);
+
         // 按状态筛选
         if (status != null) {
             wrapper.eq(Remind::getStatus, status);
         }
-        // 按提醒时间升序（最早的排前面）
+        // 按提醒时间升序
         wrapper.orderByAsc(Remind::getRemindTime);
         return remindMapper.selectList(wrapper);
     }
 
-    // ===================== 手动关闭提醒（改为 2） =====================
+    // ===================== 手动关闭提醒 =====================
     public boolean closeRemind(Long id) {
         Remind remind = remindMapper.selectById(id);
         if (remind == null) {
@@ -62,24 +69,27 @@ public class RemindService {
         return remindMapper.updateById(remind) > 0;
     }
 
-    // ===================== 自动触发提醒（核心功能） =====================
+    // ===================== 【改动 2】自动触发提醒（打印用户ID） =====================
     public List<Remind> getNeedTriggerRemind() {
-        // 1. 查询条件：待提醒(0) + 时间已到
         LambdaQueryWrapper<Remind> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Remind::getStatus, 0);
         wrapper.le(Remind::getRemindTime, LocalDateTime.now());
 
         List<Remind> remindList = remindMapper.selectList(wrapper);
 
-        // 2. 遍历提醒：打印消息 + 改为已提醒(1)
         for (Remind remind : remindList) {
             System.out.println("======================================");
             System.out.println("🔔 自动提醒触发！");
+            System.out.println("用户ID：" + remind.getUserId());  // 这里加了用户ID
             System.out.println("内容：" + remind.getContent());
             System.out.println("时间：" + remind.getRemindTime());
             System.out.println("======================================");
 
-            // 标记为已提醒，防止重复提醒
+            messageServices.sendRemindMessage(
+                    remind.getUserId(),
+                    remind.getContent()
+            );
+
             remind.setStatus(1);
             remindMapper.updateById(remind);
         }

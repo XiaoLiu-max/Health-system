@@ -33,4 +33,7 @@ public interface HealthDataMapper extends BaseMapper<HealthData> {
             @Param("start") LocalDate start,
             @Param("end") LocalDate end
     );
+
+    List<HealthData> selectTodayData(@Param("today") LocalDate today);
+
 }

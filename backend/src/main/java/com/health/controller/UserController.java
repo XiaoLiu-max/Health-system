@@ -145,6 +145,7 @@ import com.health.service.UserService;
 import com.health.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import com.health.service.FriendOnlineService;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -155,6 +156,9 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private FriendOnlineService friendOnlineService;
+
     // 注册接口（User实体本来就匹配，保持不动）
     @PostMapping("/register")
     public Result register(@RequestBody User user) {
@@ -162,16 +166,42 @@ public class UserController {
     }
 
     // 密码登录 ✅ 修复完成
+//    @PostMapping("/login/password")
+//    public Result loginByPassword(@RequestBody LoginDTO loginDTO) {
+//        return userService.loginByPassword(loginDTO.getUsername(), loginDTO.getPassword());
+//    }
+
     @PostMapping("/login/password")
     public Result loginByPassword(@RequestBody LoginDTO loginDTO) {
-        return userService.loginByPassword(loginDTO.getUsername(), loginDTO.getPassword());
-    }
+        Result result = userService.loginByPassword(loginDTO.getUsername(), loginDTO.getPassword());
 
+        // 登录成功 → 自动同步在线状态
+        if (result.isSuccess()) {
+            User user = userService.getByUsername(loginDTO.getUsername());
+            friendOnlineService.loginSyncOnline(user.getId());
+        }
+
+        return result;
+    }
     // 手机号验证码登录 ✅ 修复完成
+//    @PostMapping("/login/phone")
+//    public Result loginByPhone(@RequestBody LoginPhoneDTO loginPhoneDTO) {
+//        return userService.loginByPhone(loginPhoneDTO.getPhone(), loginPhoneDTO.getCode());
+//    }
+
     @PostMapping("/login/phone")
     public Result loginByPhone(@RequestBody LoginPhoneDTO loginPhoneDTO) {
-        return userService.loginByPhone(loginPhoneDTO.getPhone(), loginPhoneDTO.getCode());
+        Result result = userService.loginByPhone(loginPhoneDTO.getPhone(), loginPhoneDTO.getCode());
+
+        // 登录成功 → 同步在线状态
+        if (result.isSuccess()) {
+            User user = userService.getByPhone(loginPhoneDTO.getPhone());
+            friendOnlineService.loginSyncOnline(user.getId());
+        }
+
+        return result;
     }
+
 
     // 忘记密码（重置）✅ 修复完成
     @PostMapping("/forget")

@@ -36,4 +36,8 @@ public interface UserService extends IService<User> {
     void updatePassword(Long userId, String oldPassword, String newPassword);
 
     boolean isUserExist(Long userId);
+
+    public User getByUsername(String username);
+
+    public User getByPhone(String phone);
 }
