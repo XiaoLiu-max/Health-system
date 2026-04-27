@@ -144,6 +144,7 @@ import com.health.entity.User;
 import com.health.service.FriendOnlineService;
 import com.health.service.UserService;
 import com.health.utils.JwtUtil;
+import com.health.utils.UserContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -228,6 +229,8 @@ public class UserController {
     // 退出登录（无需改动）
     @PostMapping("/logout")
     public Result logout(HttpServletRequest request) {
+        Long userId = UserContext.getUserId();
+        friendOnlineService.logoutSyncOffline(userId);
         String token = request.getHeader("token");
         return Result.success("退出登录成功");
     }
