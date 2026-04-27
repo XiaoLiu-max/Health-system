@@ -34,11 +34,22 @@ public class MessageServices {
     }
 
     // ====================== 3. type=1 好友申请（你好友模块调用） ======================
-    public void sendFriendApplyMsg(Long fromUid, Long toUid) {
+//    public void sendFriendApplyMsg(Long fromUid, Long toUid) {
+//        Message msg = new Message();
+//        msg.setFromUid(fromUid);
+//        msg.setToUid(toUid);
+//        msg.setContent("用户" + fromUid + "申请添加你为好友");
+//        msg.setType(1);
+//        msg.setIsRead(0);
+//        msg.setCreateTime(LocalDateTime.now());
+//        messageMapper.insert(msg);
+//    }
+
+    public void sendFriendApplyMsg(Long fromUid, Long toUid, String content) {
         Message msg = new Message();
         msg.setFromUid(fromUid);
         msg.setToUid(toUid);
-        msg.setContent("用户" + fromUid + "申请添加你为好友");
+        msg.setContent(content); // 用传入的内容
         msg.setType(1);
         msg.setIsRead(0);
         msg.setCreateTime(LocalDateTime.now());

@@ -2,14 +2,17 @@ package com.health.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.time.LocalDateTime;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 
 @TableName("friend_online")
 public class FriendOnline {
+    @TableId(type = IdType.AUTO)
     private Long userId;
     private Integer onlineStatus;
     private LocalDateTime lastTime;
 
-    // 【必须】无参构造（MyBatis-Plus反射创建对象必备）
+    // 【必须】无参构造
     public FriendOnline() {}
 
     // 全参构造

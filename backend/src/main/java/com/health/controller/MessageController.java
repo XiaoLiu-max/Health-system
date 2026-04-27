@@ -2,6 +2,7 @@ package com.health.controller;
 
 import com.health.entity.Message;
 import com.health.service.MessageServices;
+import com.health.utils.UserContext;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,11 +20,12 @@ public class MessageController {
     @Resource
     private MessageServices messageService;
 
-    // 1. 查询当前用户全部消息
+    // 查询自己所有消息（自动token）
     @GetMapping("/list")
-    public Map<String, Object> getMyMessage(Long userId) {
+    public Map<String, Object> getMyMessage() {
         Map<String, Object> map = new HashMap<>();
         try {
+            Long userId = UserContext.getUserId();
             List<Message> list = messageService.getMyMessage(userId);
             map.put("code", 200);
             map.put("data", list);
@@ -34,7 +36,7 @@ public class MessageController {
         return map;
     }
 
-    // 2. 标记消息已读
+    // 标记已读
     @PostMapping("/read")
     public Map<String, Object> readMessage(Long msgId) {
         Map<String, Object> map = new HashMap<>();
@@ -49,14 +51,15 @@ public class MessageController {
         return map;
     }
 
-    // 3. 好友私聊发送消息
+    // 好友聊天（自动token发消息）
     @PostMapping("/sendChat")
-    public Map<String, Object> sendChat(Long fromUid, Long toUid, String content) {
+    public Map<String, Object> sendChat(Long toUid, String content) {
         Map<String, Object> map = new HashMap<>();
         try {
+            Long fromUid = UserContext.getUserId();
             messageService.sendChatMessage(fromUid, toUid, content);
             map.put("code", 200);
-            map.put("msg", "私聊消息发送成功");
+            map.put("msg", "发送成功");
         } catch (Exception e) {
             map.put("code", 500);
             map.put("msg", e.getMessage());
@@ -64,14 +67,30 @@ public class MessageController {
         return map;
     }
 
-    // 4. 队友专用推送接口（异常、健康报告）
+    // 给自己发计划/吃药/设置提醒（type=3）
+    @PostMapping("/push/self/remind")
+    public Map<String, Object> pushSelfRemind(String content) {
+        Map<String, Object> map = new HashMap<>();
+        try {
+            Long userId = UserContext.getUserId();
+            messageService.sendRemindMessage(userId, content);
+            map.put("code", 200);
+            map.put("msg", "已给自己发送提醒");
+        } catch (Exception e) {
+            map.put("code", 500);
+            map.put("msg", e.getMessage());
+        }
+        return map;
+    }
+
+    // 下面这两个留给明天改
     @PostMapping("/push/partner")
     public Map<String, Object> partnerPush(Long toUid, Integer type, String content) {
         Map<String, Object> map = new HashMap<>();
         try {
             messageService.pushFromPartnerService(toUid, type, content);
             map.put("code", 200);
-            map.put("msg", "消息推送成功");
+            map.put("msg", "推送成功");
         } catch (Exception e) {
             map.put("code", 500);
             map.put("msg", e.getMessage());

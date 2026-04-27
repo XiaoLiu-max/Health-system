@@ -1,5 +1,6 @@
 package com.health.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.health.common.Result;
 import com.health.entity.User;
@@ -36,4 +37,11 @@ public interface UserService extends IService<User> {
     void updatePassword(Long userId, String oldPassword, String newPassword);
 
     boolean isUserExist(Long userId);
+
+    // UserService 接口
+    public User getByUsername(String username);
+
+    User getByPhone(String phone);
+
+
 }

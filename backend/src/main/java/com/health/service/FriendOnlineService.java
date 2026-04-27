@@ -20,4 +20,24 @@ public class FriendOnlineService {
         wrapper.eq("user_id", userId);
         return friendOnlineMapper.selectOne(wrapper);
     }
+
+
+// 登录时自动同步：没有就插入，有就更新在线状态
+public void loginSyncOnline(Long userId) {
+    FriendOnline online = getFriendOnlineInfo(userId);
+
+    if (online == null) {
+        // 没有记录 → 自动创建
+        FriendOnline newOnline = new FriendOnline();
+        newOnline.setUserId(userId);
+        newOnline.setOnlineStatus(1);      // 1=在线
+        newOnline.setLastTime(LocalDateTime.now());
+        friendOnlineMapper.insert(newOnline);
+    } else {
+        // 有记录 → 更新为在线
+        online.setOnlineStatus(1);
+        online.setLastTime(LocalDateTime.now());
+        friendOnlineMapper.updateById(online);
+    }
+}
 }

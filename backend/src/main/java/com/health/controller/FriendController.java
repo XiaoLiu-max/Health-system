@@ -16,11 +16,11 @@ public class FriendController {
 
     // 查询好友列表
     @GetMapping("/list")
-    public Map<String, Object> getFriendList(Long userId) {
+    public Map<String, Object> getFriendList() {
         Map<String, Object> map = new HashMap<>();
         try {
             map.put("code", 200);
-            map.put("data", friendService.getFriendList(userId));
+            map.put("data", friendService.getFriendList());
         } catch (Exception e) {
             map.put("code", 500);
             map.put("msg", e.getMessage());
@@ -30,10 +30,10 @@ public class FriendController {
 
     // 双向删除好友
     @PostMapping("/delete")
-    public Map<String, Object> deleteFriend(Long userId, Long friendId) {
+    public Map<String, Object> deleteFriend(Long friendId) {
         Map<String, Object> map = new HashMap<>();
         try {
-            friendService.deleteFriend(userId, friendId);
+            friendService.deleteFriend(friendId);
             map.put("code", 200);
             map.put("msg", "好友删除成功");
         } catch (Exception e) {
@@ -45,10 +45,10 @@ public class FriendController {
 
     // 修改好友备注
     @PostMapping("/remark/update")
-    public Map<String, Object> updateRemark(Long userId, Long friendId, String remark) {
+    public Map<String, Object> updateRemark(Long friendId, String remark) {
         Map<String, Object> map = new HashMap<>();
         try {
-            friendService.updateRemark(userId, friendId, remark);
+            friendService.updateRemark(friendId, remark);
             map.put("code", 200);
             map.put("msg", "备注修改成功");
         } catch (Exception e) {
@@ -60,10 +60,10 @@ public class FriendController {
 
     // 拉黑好友
     @PostMapping("/black/add")
-    public Map<String, Object> blackFriend(Long userId, Long friendId) {
+    public Map<String, Object> blackFriend(Long friendId) {
         Map<String, Object> map = new HashMap<>();
         try {
-            friendService.blackFriend(userId, friendId);
+            friendService.blackFriend(friendId);
             map.put("code", 200);
             map.put("msg", "已拉黑好友");
         } catch (Exception e) {
@@ -75,10 +75,10 @@ public class FriendController {
 
     // 解除拉黑
     @PostMapping("/black/cancel")
-    public Map<String, Object> cancelBlack(Long userId, Long friendId) {
+    public Map<String, Object> cancelBlack(Long friendId) {
         Map<String, Object> map = new HashMap<>();
         try {
-            friendService.cancelBlack(userId, friendId);
+            friendService.cancelBlack(friendId);
             map.put("code", 200);
             map.put("msg", "已解除拉黑");
         } catch (Exception e) {
@@ -90,11 +90,11 @@ public class FriendController {
 
     // 判断是否为好友
     @GetMapping("/isFriend")
-    public Map<String, Object> isFriend(Long userId, Long friendId) {
+    public Map<String, Object> isFriend(Long friendId) {
         Map<String, Object> map = new HashMap<>();
         try {
             map.put("code", 200);
-            map.put("data", friendService.isFriend(userId, friendId));
+            map.put("data", friendService.isFriend(friendId));
         } catch (Exception e) {
             map.put("code", 500);
             map.put("msg", e.getMessage());

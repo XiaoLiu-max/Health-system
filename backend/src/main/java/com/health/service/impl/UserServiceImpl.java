@@ -1,6 +1,7 @@
 package com.health.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.health.common.Result;
 import com.health.entity.User;
@@ -167,6 +168,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         long count = baseMapper.selectCount(wrapper);
 
         return count > 0;
+    }
+
+    @Override
+    public User getByUsername(String username) {
+        QueryWrapper<User> wrapper = new QueryWrapper<>();
+        wrapper.eq("username", username);
+        // 继承了 ServiceImpl，直接用 baseMapper，无需额外注入 userMapper
+        return this.baseMapper.selectOne(wrapper);
+    }
+
+    @Override
+    public User getByPhone(String phone) {
+        return this.lambdaQuery()
+                .eq(User::getPhone, phone)
+                .one();
     }
 
 }

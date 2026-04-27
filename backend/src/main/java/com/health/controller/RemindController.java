@@ -1,6 +1,7 @@
 package com.health.controller;
 import com.health.service.RemindService;
 import com.health.entity.Remind;
+import com.health.utils.UserContext;
 import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.util.List;
@@ -13,9 +14,15 @@ public class RemindController {
     private RemindService remindService;
 
     // ===================== 原有基础接口 =====================
-    // 1.新增
-    @PostMapping
+    // 1.新增（必须传 userId）
+    @PostMapping("/add")
     public String add(@RequestBody Remind remind) {
+        // 从上下文自动获取当前登录用户ID
+        Long currentUserId = UserContext.getUserId();
+        if (currentUserId == null) {
+            return "未登录，请先登录";
+        }
+        remind.setUserId(currentUserId);
         boolean result = remindService.addRemind(remind);
         return result ? "提醒添加成功!" : "添加失败";
     }
@@ -52,11 +59,15 @@ public class RemindController {
         return result ? "删除成功!" : "删除失败";
     }
 
-    // ===================== 业务扩展接口（严格按你表格） =====================
-    // 查询我的提醒（可传状态筛选）
+    // ===================== 业务扩展接口 =====================
+    // 查询我的提醒 → 【改动：必须传 userId】
     @GetMapping("/my")
     public List<Remind> getMyReminds(@RequestParam(required = false) Integer status) {
-        return remindService.getMyReminds(status);
+        Long currentUserId = UserContext.getUserId();
+        if (currentUserId == null) {
+            throw new RuntimeException("未登录");
+        }
+        return remindService.getMyReminds(currentUserId, status);
     }
 
     // 关闭提醒
@@ -66,7 +77,7 @@ public class RemindController {
         return result ? "提醒已关闭" : "数据不存在";
     }
 
-    // 系统触发接口：查询所有到期待提醒的数据
+    // 系统触发接口
     @GetMapping("/trigger")
     public List<Remind> getTriggerRemind() {
         return remindService.getNeedTriggerRemind();

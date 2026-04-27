@@ -37,4 +37,9 @@ public class Result<T> {
         r.setMsg(msg);
         return r;
     }
+
+    // 判断当前返回结果是否成功
+    public boolean isSuccess() {
+        return this.code == 200;
+    }
 }

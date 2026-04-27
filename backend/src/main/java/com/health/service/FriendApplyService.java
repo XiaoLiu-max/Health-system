@@ -5,9 +5,11 @@ import com.health.entity.Friend;
 import com.health.entity.FriendApply;
 import com.health.entity.Message;
 
+import com.health.entity.User;
 import com.health.mapper.FriendApplyMapper;
 import com.health.mapper.FriendMapper;
 import com.health.mapper.MessageMapper;
+import com.health.mapper.UserMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -28,7 +30,15 @@ public class FriendApplyService {
     private MessageMapper messageMapper;
 
     @Resource
+    private UserMapper userMapper;
+
+    @Resource
     private RestTemplate restTemplate;
+
+    // 注入 MessageServices
+    @Resource
+    private MessageServices messageServices;
+
 
     // 发送好友申请
     @Transactional
@@ -44,21 +54,11 @@ public class FriendApplyService {
             throw new RuntimeException("不能添加自己");
         }
 
-//         2. 调用队友接口检查用户是否存在
-        // ===================== 队友用户接口地址 =====================
-        String url = "http://localhost:8080" + "/exist/{userId}/" + toUserId;
-
-// 发送请求调用队友
-        Boolean exist;
-        try {
-            exist = restTemplate.getForObject(url, Boolean.class);
-        } catch (Exception e) {
-            throw new RuntimeException("连接队友用户服务失败，请检查队友服务是否启动");
-        }
-
-        if (exist == null || !exist) {
-            throw new RuntimeException("用户不存在");
-        }
+         // 2. 直接判断用户是否存在（不需要调用远程接口）
+    User user = userMapper.selectById(toUserId);
+    if (user == null) {
+        throw new RuntimeException("用户不存在");
+    }
 
         // 3. 判断是否已经是好友
         QueryWrapper<Friend> fq = new QueryWrapper<>();
@@ -84,15 +84,23 @@ public class FriendApplyService {
         apply.setApplyTime(LocalDateTime.now());
         friendApplyMapper.insert(apply);
 
-        // 6. 插入消息提醒（你已有Message，直接插入）
-        Message msg = new Message();
-        msg.setFromUid(fromUserId);
-        msg.setToUid(toUserId);
-        msg.setContent("申请添加你为好友");
-        msg.setType(1);
-        msg.setIsRead(0);
-        msg.setCreateTime(LocalDateTime.now());
-        messageMapper.insert(msg);
+        // 6. 插入消息提醒（已有Message，直接插入）
+//        Message msg = new Message();
+//        msg.setFromUid(fromUserId);
+//        msg.setToUid(toUserId);
+//        msg.setContent("申请添加你为好友");
+//        msg.setType(1);
+//        msg.setIsRead(0);
+//        msg.setCreateTime(LocalDateTime.now());
+//        messageMapper.insert(msg);
+
+
+// 发送好友申请消息（统一走 Service）
+        messageServices.sendFriendApplyMsg(
+                fromUserId,
+                toUserId,
+                "申请添加你为好友"
+        );
     }
 
     // 处理好友申请（同意/拒绝）
