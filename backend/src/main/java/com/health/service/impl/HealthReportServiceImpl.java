@@ -114,6 +114,7 @@ public class HealthReportServiceImpl extends ServiceImpl<HealthReportMapper, Hea
             this.save(report);
         }
     }
+
     // ===================== 【唯一修改】getAnalysis 方法 =====================
     // 规则完全不变！严格程度不变！只修复BUG！
     private String getAnalysis(List<HealthData> list, int type) {
@@ -222,6 +223,7 @@ public class HealthReportServiceImpl extends ServiceImpl<HealthReportMapper, Hea
             return sb.toString();
         }
     }
+
     // 下面的代码 100% 完全是你原版！
     private double getSleepThreshold(Long userId) {
         User user = userService.getById(userId);

@@ -54,11 +54,11 @@ public class FriendApplyService {
             throw new RuntimeException("不能添加自己");
         }
 
-         // 2. 直接判断用户是否存在（不需要调用远程接口）
-    User user = userMapper.selectById(toUserId);
-    if (user == null) {
-        throw new RuntimeException("用户不存在");
-    }
+        // 2. 直接判断用户是否存在（不需要调用远程接口）
+        User user = userMapper.selectById(toUserId);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
 
         // 3. 判断是否已经是好友
         QueryWrapper<Friend> fq = new QueryWrapper<>();

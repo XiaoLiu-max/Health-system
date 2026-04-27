@@ -141,12 +141,12 @@ package com.health.controller;
 import com.health.common.Result;
 import com.health.dto.*;
 import com.health.entity.User;
-import com.health.service.FriendOnlineService;
 import com.health.service.UserService;
 import com.health.utils.JwtUtil;
 import com.health.utils.UserContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import com.health.service.FriendOnlineService;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -166,6 +166,12 @@ public class UserController {
         return userService.register(user);
     }
 
+    // 密码登录 ✅ 修复完成
+//    @PostMapping("/login/password")
+//    public Result loginByPassword(@RequestBody LoginDTO loginDTO) {
+//        return userService.loginByPassword(loginDTO.getUsername(), loginDTO.getPassword());
+//    }
+
     @PostMapping("/login/password")
     public Result loginByPassword(@RequestBody LoginDTO loginDTO) {
         Result result = userService.loginByPassword(loginDTO.getUsername(), loginDTO.getPassword());
@@ -178,8 +184,12 @@ public class UserController {
 
         return result;
     }
-
     // 手机号验证码登录 ✅ 修复完成
+//    @PostMapping("/login/phone")
+//    public Result loginByPhone(@RequestBody LoginPhoneDTO loginPhoneDTO) {
+//        return userService.loginByPhone(loginPhoneDTO.getPhone(), loginPhoneDTO.getCode());
+//    }
+
     @PostMapping("/login/phone")
     public Result loginByPhone(@RequestBody LoginPhoneDTO loginPhoneDTO) {
         Result result = userService.loginByPhone(loginPhoneDTO.getPhone(), loginPhoneDTO.getCode());
@@ -192,6 +202,7 @@ public class UserController {
 
         return result;
     }
+
 
     // 忘记密码（重置）✅ 修复完成
     @PostMapping("/forget")
@@ -227,6 +238,13 @@ public class UserController {
     }
 
     // 退出登录（无需改动）
+//    @PostMapping("/logout")
+//    public Result logout(HttpServletRequest request) {
+//        String token = request.getHeader("token");
+//        return Result.success("退出登录成功");
+//    }
+
+    // 退出登录（无需改动）
     @PostMapping("/logout")
     public Result logout(HttpServletRequest request) {
         Long userId = UserContext.getUserId();
@@ -259,5 +277,5 @@ public class UserController {
         boolean exist = userService.isUserExist(userId);
         return Result.success(exist);
     }
-    
+
 }
