@@ -1,6 +1,6 @@
 package com.health.controller;
 
-import com.health.entity.Message;
+import com.health.service.MessageService;
 import com.health.service.MessageServices;
 import com.health.utils.UserContext;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -18,17 +17,19 @@ import java.util.Map;
 public class MessageController {
 
     @Resource
-    private MessageServices messageService;
+    private MessageServices messageServices;
 
-    // 查询自己所有消息（自动token）
+    @Resource
+    private MessageService messageService;
+
+    // ===================== 基础 =====================
     @GetMapping("/list")
     public Map<String, Object> getMyMessage() {
         Map<String, Object> map = new HashMap<>();
         try {
             Long userId = UserContext.getUserId();
-            List<Message> list = messageService.getMyMessage(userId);
             map.put("code", 200);
-            map.put("data", list);
+            map.put("data", messageServices.getMyMessage(userId));
         } catch (Exception e) {
             map.put("code", 500);
             map.put("msg", e.getMessage());
@@ -36,14 +37,13 @@ public class MessageController {
         return map;
     }
 
-    // 标记已读
     @PostMapping("/read")
     public Map<String, Object> readMessage(Long msgId) {
         Map<String, Object> map = new HashMap<>();
         try {
-            messageService.readMessage(msgId);
+            messageServices.readMessage(msgId);
             map.put("code", 200);
-            map.put("msg", "消息已读");
+            map.put("msg", "已读成功");
         } catch (Exception e) {
             map.put("code", 500);
             map.put("msg", e.getMessage());
@@ -51,31 +51,17 @@ public class MessageController {
         return map;
     }
 
-    // 好友聊天（自动token发消息）
-    @PostMapping("/sendChat")
-    public Map<String, Object> sendChat(Long toUid, String content) {
-        Map<String, Object> map = new HashMap<>();
-        try {
-            Long fromUid = UserContext.getUserId();
-            messageService.sendChatMessage(fromUid, toUid, content);
-            map.put("code", 200);
-            map.put("msg", "发送成功");
-        } catch (Exception e) {
-            map.put("code", 500);
-            map.put("msg", e.getMessage());
-        }
-        return map;
-    }
-
-    // 给自己发计划/吃药/设置提醒（type=3）
-    @PostMapping("/push/self/remind")
-    public Map<String, Object> pushSelfRemind(String content) {
+    // ===================== 1. 测试：给自己发 健康异常 消息 =====================
+    @PostMapping("/test/send/abnormal/self")
+    public Map<String, Object> testSendSelfAbnormal(String content) {
         Map<String, Object> map = new HashMap<>();
         try {
             Long userId = UserContext.getUserId();
-            messageService.sendRemindMessage(userId, content);
+            // ✅ 改成你真实存在的方法（统一发送健康提醒）
+            // 正确（3个参数）
+            messageService.sendHealthWarn(userId, content, "请关注您的健康状态");
             map.put("code", 200);
-            map.put("msg", "已给自己发送提醒");
+            map.put("msg", "已给自己发送【健康异常】消息");
         } catch (Exception e) {
             map.put("code", 500);
             map.put("msg", e.getMessage());
@@ -83,14 +69,116 @@ public class MessageController {
         return map;
     }
 
-    // 下面这两个留给明天改
-    @PostMapping("/push/partner")
-    public Map<String, Object> partnerPush(Long toUid, Integer type, String content) {
+    // ===================== 2. 测试：给好友发 健康异常 消息 =====================
+    @PostMapping("/test/send/abnormal/friend")
+    public Map<String, Object> testSendFriendAbnormal(Long friendId, String content) {
         Map<String, Object> map = new HashMap<>();
         try {
-            messageService.pushFromPartnerService(toUid, type, content);
+            Long userId = UserContext.getUserId();
+            // ✅ 这个方法你是有的，正常保留
+            messageServices.sendAbnormalToFriend(userId, friendId, content);
             map.put("code", 200);
-            map.put("msg", "推送成功");
+            map.put("msg", "已给好友发送【健康异常】消息");
+        } catch (Exception e) {
+            map.put("code", 500);
+            map.put("msg", e.getMessage());
+        }
+        return map;
+    }
+
+    // ===================== 3. 测试：给自己发 健康报告 提醒 =====================
+    @PostMapping("/test/send/report/self")
+    public Map<String, Object> testSendSelfReport() {
+        Map<String, Object> map = new HashMap<>();
+        try {
+            Long userId = UserContext.getUserId();
+            // ✅ 用你真实存在的 sendHealthWarn
+            messageService.sendHealthWarn(userId, "健康报告已生成", "请及时查看您的健康数据");
+            map.put("code", 200);
+            map.put("msg", "已给自己发送【健康报告】消息");
+        } catch (Exception e) {
+            map.put("code", 500);
+            map.put("msg", e.getMessage());
+        }
+        return map;
+    }
+
+    // ===================== 4. 测试：给好友发 健康报告（兼容版） =====================
+    @PostMapping("/test/send/report/friend")
+    public Map<String, Object> testSendReportToFriend(Long friendId, String url) {
+        Map<String, Object> map = new HashMap<>();
+        try {
+            Long userId = UserContext.getUserId();
+            // ✅ 调用你真实存在的【周报】方法（测试用，不影响业务）
+            messageServices.sendWeekReportToFriend(userId, friendId, url);
+            map.put("code", 200);
+            map.put("msg", "已给好友发送【健康报告】");
+        } catch (Exception e) {
+            map.put("code", 500);
+            map.put("msg", e.getMessage());
+        }
+        return map;
+    }
+
+    // ===================== 给好友发 月报 提醒 =====================
+    @PostMapping("/test/send/monthReport/friend")
+    public Map<String, Object> testSendMonthReportToFriend(Long friendId, String url) {
+        Map<String, Object> map = new HashMap<>();
+        try {
+            Long userId = UserContext.getUserId();
+            // 调用你已有的月报发送方法
+            messageServices.sendMonthReportToFriend(userId, friendId, url);
+            map.put("code", 200);
+            map.put("msg", "已给好友发送【月度健康报告】");
+        } catch (Exception e) {
+            map.put("code", 500);
+            map.put("msg", e.getMessage());
+        }
+        return map;
+    }
+
+    // ===================== 5. 测试：好友聊天 =====================
+    @PostMapping("/test/send/chat")
+    public Map<String, Object> testSendChat(Long toUid, String content) {
+        Map<String, Object> map = new HashMap<>();
+        try {
+            Long fromUid = UserContext.getUserId();
+            messageServices.sendChatMessage(fromUid, toUid, content);
+            map.put("code", 200);
+            map.put("msg", "私聊发送成功");
+        } catch (Exception e) {
+            map.put("code", 500);
+            map.put("msg", e.getMessage());
+        }
+        return map;
+    }
+
+    // ===================== 6. 测试：自定义提醒（type=3） =====================
+    @PostMapping("/test/send/remind")
+    public Map<String, Object> testSendRemind(String content) {
+        Map<String, Object> map = new HashMap<>();
+        try {
+            Long userId = UserContext.getUserId();
+            messageServices.sendRemindMessage(userId, content);
+            map.put("code", 200);
+            map.put("msg", "已发送自定义提醒");
+        } catch (Exception e) {
+            map.put("code", 500);
+            map.put("msg", e.getMessage());
+        }
+        return map;
+    }
+
+    // ===================== 7. 测试：发送好友申请消息 =====================
+    @PostMapping("/test/send/friendApply")
+    public Map<String, Object> testSendFriendApply(Long toUid) {
+        Map<String, Object> map = new HashMap<>();
+        try {
+            Long fromUid = UserContext.getUserId();
+            String content = "用户" + fromUid + " 申请添加你为好友";
+            messageServices.sendFriendApplyMsg(fromUid, toUid, content);
+            map.put("code", 200);
+            map.put("msg", "好友申请消息发送成功");
         } catch (Exception e) {
             map.put("code", 500);
             map.put("msg", e.getMessage());

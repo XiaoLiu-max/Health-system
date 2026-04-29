@@ -137,4 +137,17 @@ public class FriendService {
         wrapper.eq("user_id", userId).eq("friend_id", friendId).eq("status", 1);
         return friendMapper.selectCount(wrapper) > 0;
     }
+
+    // ============================
+// 获取用户所有好友ID（专门给报告推送用）
+// ============================
+    public List<Long> getFriendIdsByUserId(Long userId) {
+        QueryWrapper<Friend> wrapper = new QueryWrapper<>();
+        wrapper.eq("user_id", userId).eq("status", 1);
+        List<Friend> friends = friendMapper.selectList(wrapper);
+
+        return friends.stream()
+                .map(Friend::getFriendId)
+                .collect(Collectors.toList());
+    }
 }

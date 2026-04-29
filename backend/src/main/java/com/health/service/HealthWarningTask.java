@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,6 +33,12 @@ public class HealthWarningTask {
     @Autowired
     private UserMapper userMapper; // 用来查年龄
 
+    @Resource
+    private MessageServices messageServices;
+
+    @Resource
+    private FriendService friendService;
+
     // 每天 20:00 执行
 //    @Scheduled(cron = "0 0 20 * * ?")
     @Scheduled(fixedRate = 3000)
@@ -49,9 +56,15 @@ public class HealthWarningTask {
 
             if (!abnormalMsg.isEmpty()) {
                 boolean alreadySent = remindMapper.existsTodayAbnormalRemind(userId, today);
+//                if (!alreadySent) {
+//                    saveRemind(userId, abnormalMsg);
+//                    sendToFriends(userId, abnormalMsg);
+//                }
+
                 if (!alreadySent) {
-                    saveRemind(userId, abnormalMsg);
-                    saveMessage(userId, abnormalMsg);
+                    saveRemind(userId, abnormalMsg);   // 存提醒表
+                    saveMessage(userId, abnormalMsg);  // ✅ 加到 message 表（前端能看到）
+                    sendToFriends(userId, abnormalMsg);
                 }
             }
         }
@@ -68,14 +81,29 @@ public class HealthWarningTask {
         remindMapper.insert(remind);
     }
 
-    // 存入消息
+    // 给自己发异常消息
     private void saveMessage(Long userId, String msg) {
         Message message = new Message();
-        message.setFromUid(0L); // 系统发送
+        message.setFromUid(0L);
         message.setToUid(userId);
         message.setContent("您今日健康数据异常：" + msg);
+        message.setType(4); // 异常消息type=4
         message.setIsRead(0);
         message.setCreateTime(LocalDateTime.now());
         messageMapper.insert(message);
     }
+
+    // 存入消息 + 同步给好友
+    private void sendToFriends(Long userId, String msg) {
+//
+        // 2. 获取该用户所有好友
+        List<Long> friendIds = friendService.getFriendIdsByUserId(userId);
+
+        // 3. 给每个好友发同样的异常提醒
+        for (Long friendId : friendIds) {
+            messageServices.sendAbnormalToFriend(userId, friendId, msg);
+        }
+    }
+
+
 }
