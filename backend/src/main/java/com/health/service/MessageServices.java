@@ -3,6 +3,7 @@ package com.health.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.health.entity.Message;
+import com.health.entity.User;
 import com.health.mapper.MessageMapper;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,9 @@ public class MessageServices {
 
     @Resource
     private MessageMapper messageMapper;
+
+    @Resource
+    private UserService userService;
 
     // ====================== 1. 查询当前用户所有消息 ======================
     public List<Message> getMyMessage(Long userId) {
@@ -34,16 +38,6 @@ public class MessageServices {
     }
 
     // ====================== 3. type=1 好友申请（你好友模块调用） ======================
-//    public void sendFriendApplyMsg(Long fromUid, Long toUid) {
-//        Message msg = new Message();
-//        msg.setFromUid(fromUid);
-//        msg.setToUid(toUid);
-//        msg.setContent("用户" + fromUid + "申请添加你为好友");
-//        msg.setType(1);
-//        msg.setIsRead(0);
-//        msg.setCreateTime(LocalDateTime.now());
-//        messageMapper.insert(msg);
-//    }
 
     public void sendFriendApplyMsg(Long fromUid, Long toUid, String content) {
         Message msg = new Message();
@@ -69,7 +63,7 @@ public class MessageServices {
     }
 
     // ====================== 5. type=3 【你本地自定义定时提醒】补齐！ ======================
-    // 你的 remind 模块时间到了，直接调用这个方法发提醒消息
+    // remind 模块时间到了，直接调用这个方法发提醒消息
     public void sendRemindMessage(Long userId, String content) {
         Message msg = new Message();
         msg.setFromUid(0L);    // 系统提醒，发送人为0
@@ -93,4 +87,57 @@ public class MessageServices {
         msg.setCreateTime(LocalDateTime.now());
         messageMapper.insert(msg);
     }
+
+
+
+    // ====================== 给好友发：周报   ======================
+    public void sendWeekReportToFriend(Long userId, Long friendId, String url) {
+        User user = userService.getById(userId);
+        String username = user.getUsername() != null ? user.getUsername() : "好友";
+
+        Message msg = new Message();
+        msg.setFromUid(userId);
+        msg.setToUid(friendId);
+        msg.setContent("【好友周报】" + username + " 生成了每周健康报告，点击查看");
+        msg.setUrl(url);
+        msg.setType(5);
+        msg.setIsRead(0);
+        msg.setCreateTime(LocalDateTime.now());
+        messageMapper.insert(msg);
+    }
+
+    // ====================== 给好友发：月报 ======================
+    public void sendMonthReportToFriend(Long userId, Long friendId, String url) {
+        User user = userService.getById(userId);
+        String username = user.getUsername() != null ? user.getUsername() : "好友";
+
+        Message msg = new Message();
+        msg.setFromUid(userId);
+        msg.setToUid(friendId);
+        msg.setContent("【好友月报】" + username + " 生成了每月健康报告，点击查看");
+        msg.setUrl(url);
+        msg.setType(5);
+        msg.setIsRead(0);
+        msg.setCreateTime(LocalDateTime.now());
+        messageMapper.insert(msg);
+    }
+
+    // 4. 自动给好友发异常
+    public void sendAbnormalToFriend(Long userId, Long friendId, String content) {
+        // 获取用户真实名字
+        User user = userService.getById(userId);
+        String username = user.getUsername() != null ? user.getUsername() : "你的好友";
+
+        Message msg = new Message();
+        msg.setFromUid(userId);
+        msg.setToUid(friendId);
+        // 最终效果：【好友健康异常】张三 血压偏高
+        msg.setContent("【好友健康异常】" + username + " 健康数据异常：" + content);
+        msg.setType(4);
+        msg.setIsRead(0);
+        msg.setCreateTime(LocalDateTime.now());
+        messageMapper.insert(msg);
+    }
+
+
 }

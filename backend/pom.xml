@@ -107,6 +107,13 @@
             <version>2.10.1</version>
         </dependency>
 
+        <!-- 讯飞星火官方 SDK（Spark Lite） -->
+        <dependency>
+            <groupId>cn.xfyun</groupId>
+            <artifactId>websdk-java-spark</artifactId>
+            <version>2.1.5</version>
+        </dependency>
+
     </dependencies>
 
     <build>

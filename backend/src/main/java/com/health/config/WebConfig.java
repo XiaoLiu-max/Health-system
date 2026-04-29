@@ -13,7 +13,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns(
                         "/user/login/password",   // 密码登录
                         "/user/login/phone",      // 手机号登录
-                        "/user/sendCode"          // 发送验证码
+                        "/user/sendCode",          // 发送验证码
+                        "/ai/chat"
                 );
     }
 }

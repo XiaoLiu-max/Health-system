@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,9 +33,15 @@ public class HealthWarningTask {
     @Autowired
     private UserMapper userMapper; // 用来查年龄
 
+    @Resource
+    private MessageServices messageServices;
+
+    @Resource
+    private FriendService friendService;
+
     // 每天 20:00 执行
-//    @Scheduled(cron = "0 0 20 * * ?")
-    @Scheduled(fixedRate = 3000)
+    @Scheduled(cron = "0 0 20 * * ?")
+//    @Scheduled(fixedRate = 3000)
     public void autoCheckHealthWarning() {
         LocalDate today = LocalDate.now();
         List<HealthData> dataList = healthDataMapper.selectTodayData(today);
@@ -74,8 +81,22 @@ public class HealthWarningTask {
         message.setFromUid(0L); // 系统发送
         message.setToUid(userId);
         message.setContent("您今日健康数据异常：" + msg);
+        message.setType(4);
         message.setIsRead(0);
         message.setCreateTime(LocalDateTime.now());
         messageMapper.insert(message);
     }
+
+    // 存入消息 + 同步给好友
+    private void sendToFriends(Long userId, String msg) {
+//
+        // 2. 获取该用户所有好友
+        List<Long> friendIds = friendService.getFriendIdsByUserId(userId);
+
+        // 3. 给每个好友发同样的异常提醒
+        for (Long friendId : friendIds) {
+            messageServices.sendAbnormalToFriend(userId, friendId, msg);
+        }
+    }
+
 }

@@ -5,9 +5,7 @@ import com.health.entity.HealthData;
 import com.health.entity.HealthReport;
 import com.health.entity.User;
 import com.health.mapper.HealthReportMapper;
-import com.health.service.HealthDataService;
-import com.health.service.HealthReportService;
-import com.health.service.UserService;
+import com.health.service.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -36,6 +34,12 @@ public class HealthReportServiceImpl extends ServiceImpl<HealthReportMapper, Hea
 
     @Resource
     private ObjectMapper objectMapper;
+
+    @Resource
+    private MessageServices messageServices;
+
+    @Resource
+    private FriendService friendService;
 
     @Override
     public void createWeekReport() {
@@ -114,6 +118,26 @@ public class HealthReportServiceImpl extends ServiceImpl<HealthReportMapper, Hea
             this.save(report);
         }
     }
+
+    // ====================== 报告生成后：发消息给自己 + 同步给好友 ======================
+//        // 1. 给自己发提醒
+//        messageServices.sendReportRemindToSelf(userId);
+
+    // 2. 【自动生成链接】代码自动拼，不需要你找地址
+    String reportUrl = "http://localhost:8080/report/" + userId;
+
+    // 3. 自动发给所有好友（区分周报 + 月报，带名字）
+    List<Long> friendIds = friendService.getFriendIdsByUserId(userId);
+        for (Long friendId : friendIds) {
+        if (type == 1) {
+            // 周报
+            messageServices.sendWeekReportToFriend(userId, friendId, reportUrl);
+        } else {
+            // 月报
+            messageServices.sendMonthReportToFriend(userId, friendId, reportUrl);
+        }
+    }
+}
 
     // ===================== 【唯一修改】getAnalysis 方法 =====================
     // 规则完全不变！严格程度不变！只修复BUG！

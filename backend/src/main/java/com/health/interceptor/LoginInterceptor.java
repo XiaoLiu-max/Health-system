@@ -22,6 +22,24 @@ public class LoginInterceptor implements HandlerInterceptor {
             return true;
         }
 
+        if (uri.startsWith("/ai/chat")) {
+            String token = request.getHeader("token");
+            if (token == null || token.isEmpty()) {
+                response.setContentType("application/json;charset=utf-8");
+                response.getWriter().write(new ObjectMapper().writeValueAsString(Result.fail("请先登录")));
+                return false;
+            }
+            try {
+                // 只校验Token是否有效，不存入ThreadLocal
+                JwtUtil.getUserId(token);
+                return true;
+            } catch (Exception e) {
+                response.setContentType("application/json;charset=utf-8");
+                response.getWriter().write(new ObjectMapper().writeValueAsString(Result.fail("登录已过期")));
+                return false;
+            }
+        }
+
         String token = request.getHeader("token");
 
         if (token == null || token.isEmpty()) {
