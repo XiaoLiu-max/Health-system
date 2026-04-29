@@ -117,27 +117,27 @@ public class HealthReportServiceImpl extends ServiceImpl<HealthReportMapper, Hea
             report.setChartData(chartData);
             this.save(report);
         }
-    }
 
-    // ====================== 报告生成后：发消息给自己 + 同步给好友 ======================
+        // ====================== 报告生成后：发消息给自己 + 同步给好友 ======================
 //        // 1. 给自己发提醒
 //        messageServices.sendReportRemindToSelf(userId);
 
-    // 2. 【自动生成链接】代码自动拼，不需要你找地址
-    String reportUrl = "http://localhost:8080/report/" + userId;
+        // 2. 【自动生成链接】代码自动拼，不需要你找地址
+        String reportUrl = "http://localhost:8080/report/" + userId;
 
-    // 3. 自动发给所有好友（区分周报 + 月报，带名字）
-    List<Long> friendIds = friendService.getFriendIdsByUserId(userId);
+        // 3. 自动发给所有好友（区分周报 + 月报，带名字）
+        List<Long> friendIds = friendService.getFriendIdsByUserId(userId);
         for (Long friendId : friendIds) {
-        if (type == 1) {
-            // 周报
-            messageServices.sendWeekReportToFriend(userId, friendId, reportUrl);
-        } else {
-            // 月报
-            messageServices.sendMonthReportToFriend(userId, friendId, reportUrl);
+            if (type == 1) {
+                // 周报
+                messageServices.sendWeekReportToFriend(userId, friendId, reportUrl);
+            } else {
+                // 月报
+                messageServices.sendMonthReportToFriend(userId, friendId, reportUrl);
+            }
         }
     }
-}
+
 
     // ===================== 【唯一修改】getAnalysis 方法 =====================
     // 规则完全不变！严格程度不变！只修复BUG！
