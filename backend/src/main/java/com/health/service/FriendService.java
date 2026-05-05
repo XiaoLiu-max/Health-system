@@ -16,139 +16,111 @@ import java.util.stream.Collectors;
 
 @Service
 public class FriendService {
-
-    // ✅ 两个 mapper 都要加 @Resource
     @Resource
     private FriendMapper friendMapper;
-
     @Resource
     private FriendOnlineMapper friendOnlineMapper;
 
-    // ============================
-    // 获取当前用户好友列表（从Token取userId）
-    // ============================
+    // 好友列表：展示所有好友，包含自己的拉黑状态
     public List<Map<String, Object>> getFriendList() {
-        // ✅ 从 UserContext 获取当前登录用户ID
         Long userId = UserContext.getUserId();
-
         QueryWrapper<Friend> wrapper = new QueryWrapper<>();
-        wrapper.eq("user_id", userId).eq("status", 1);
+        wrapper.eq("user_id", userId);
         List<Friend> list = friendMapper.selectList(wrapper);
-
         return list.stream().map(f -> {
             Map<String, Object> map = new HashMap<>();
             map.put("friendId", f.getFriendId());
+            map.put("username", "用户" + f.getFriendId());
             map.put("remark", f.getRemark());
             map.put("status", f.getStatus());
-
-            // 查询在线状态
-            FriendOnline online = friendOnlineMapper.selectOne(
-                    new QueryWrapper<FriendOnline>().eq("user_id", f.getFriendId())
-            );
-
-            if (online != null) {
-                map.put("onlineStatus", online.getOnlineStatus());
-                map.put("lastTime", online.getLastTime());
-            } else {
-                map.put("onlineStatus", 0);
-                map.put("lastTime", null);
-            }
-
+            FriendOnline online = friendOnlineMapper.selectOne(new QueryWrapper<FriendOnline>().eq("user_id", f.getFriendId()));
+            map.put("onlineStatus", online != null ? online.getOnlineStatus() : 0);
+            map.put("lastTime", online != null ? online.getLastTime() : null);
+            map.put("unread", 0);
             return map;
         }).collect(Collectors.toList());
     }
 
-    // ============================
-    // 删除好友（从Token取userId）
-    // ============================
+    // 双向删除好友
     public void deleteFriend(Long friendId) {
         Long userId = UserContext.getUserId();
-
-        QueryWrapper<Friend> w1 = new QueryWrapper<>();
-        w1.eq("user_id", userId).eq("friend_id", friendId);
-        friendMapper.delete(w1);
-
-        QueryWrapper<Friend> w2 = new QueryWrapper<>();
-        w2.eq("user_id", friendId).eq("friend_id", userId);
-        friendMapper.delete(w2);
+        friendMapper.delete(new QueryWrapper<Friend>().eq("user_id", userId).eq("friend_id", friendId));
+        friendMapper.delete(new QueryWrapper<Friend>().eq("user_id", friendId).eq("friend_id", userId));
     }
 
-    // ============================
-    // 修改备注（从Token取userId）
-    // ============================
+    // 修改备注
     public void updateRemark(Long friendId, String remark) {
         Long userId = UserContext.getUserId();
-
-        QueryWrapper<Friend> wrapper = new QueryWrapper<>();
-        wrapper.eq("user_id", userId).eq("friend_id", friendId);
-        Friend friend = friendMapper.selectOne(wrapper);
-
-        if (friend == null) {
-            throw new RuntimeException("好友关系不存在");
-        }
-
+        Friend friend = friendMapper.selectOne(new QueryWrapper<Friend>().eq("user_id", userId).eq("friend_id", friendId));
+        if (friend == null) throw new RuntimeException("好友关系不存在");
         friend.setRemark(remark);
         friendMapper.updateById(friend);
     }
 
-    // ============================
-    // 拉黑（从Token取userId）
-    // ============================
+    // 【单向拉黑：只改自己，不改对方！】
     public void blackFriend(Long friendId) {
         Long userId = UserContext.getUserId();
 
-        QueryWrapper<Friend> wrapper = new QueryWrapper<>();
-        wrapper.eq("user_id", userId).eq("friend_id", friendId);
-        Friend friend = friendMapper.selectOne(wrapper);
+        // 只修改 自己 -> 对方 这条记录
+        QueryWrapper<Friend> wrapper1 = new QueryWrapper<>();
+        wrapper1.eq("user_id", userId).eq("friend_id", friendId);
+        Friend self = friendMapper.selectOne(wrapper1);
+        if (self == null) throw new RuntimeException("好友关系不存在");
 
-        if (friend == null) {
-            throw new RuntimeException("好友关系不存在");
-        }
+        self.setStatus(0);
+        self.setBlackInitiator(1); // 标记：我主动拉黑
+        friendMapper.updateById(self);
 
-        friend.setStatus(0);
-        friendMapper.updateById(friend);
+        // ❌ 关键：不再修改对方那条！！！
     }
 
-    // ============================
-    // 取消拉黑（从Token取userId）
-    // ============================
+    // 【单向取消拉黑】
     public void cancelBlack(Long friendId) {
         Long userId = UserContext.getUserId();
 
-        QueryWrapper<Friend> wrapper = new QueryWrapper<>();
-        wrapper.eq("user_id", userId).eq("friend_id", friendId);
-        Friend friend = friendMapper.selectOne(wrapper);
+        QueryWrapper<Friend> wrapper1 = new QueryWrapper<>();
+        wrapper1.eq("user_id", userId).eq("friend_id", friendId);
+        Friend self = friendMapper.selectOne(wrapper1);
+        if (self == null) throw new RuntimeException("好友关系不存在");
 
-        if (friend == null) {
-            throw new RuntimeException("好友关系不存在");
-        }
+        self.setStatus(1);
+        self.setBlackInitiator(null);
+        friendMapper.updateById(self);
 
-        friend.setStatus(1);
-        friendMapper.updateById(friend);
+        // ❌ 不再修改对方那条
     }
-
-    // ============================
-    // 判断是否好友（从Token取userId）
-    // ============================
-    public boolean isFriend(Long friendId) {
+    // 【终极判断：查对方是否拉黑我】
+    public int getBlockType(Long friendId) {
         Long userId = UserContext.getUserId();
 
-        QueryWrapper<Friend> wrapper = new QueryWrapper<>();
-        wrapper.eq("user_id", userId).eq("friend_id", friendId).eq("status", 1);
-        return friendMapper.selectCount(wrapper) > 0;
+        // 1. 查：我有没有拉黑对方（查我自己这条）
+        QueryWrapper<Friend> selfWrap = new QueryWrapper<>();
+        selfWrap.eq("user_id", userId).eq("friend_id", friendId);
+        Friend self = friendMapper.selectOne(selfWrap);
+
+        // 2. 查：对方有没有拉黑我（查对方那条）
+        QueryWrapper<Friend> otherWrap = new QueryWrapper<>();
+        otherWrap.eq("user_id", friendId).eq("friend_id", userId);
+        Friend other = friendMapper.selectOne(otherWrap);
+
+        // ✅ 优先级：自己主动拉黑 > 被对方拉黑
+        if (self != null && self.getStatus() == 0) {
+            return 1; // 我拉黑对方
+        }
+        if (other != null && other.getStatus() == 0) {
+            return 2; // 对方拉黑我
+        }
+        return 0; // 正常
+    }
+    // 判断是否好友
+    public boolean isFriend(Long friendId) {
+        Long userId = UserContext.getUserId();
+        return friendMapper.selectCount(new QueryWrapper<Friend>().eq("user_id", userId).eq("friend_id", friendId).eq("status", 1)) > 0;
     }
 
-    // ============================
-// 获取用户所有好友ID（专门给报告推送用）
-// ============================
+    // 获取正常好友ID（推送用）
     public List<Long> getFriendIdsByUserId(Long userId) {
-        QueryWrapper<Friend> wrapper = new QueryWrapper<>();
-        wrapper.eq("user_id", userId).eq("status", 1);
-        List<Friend> friends = friendMapper.selectList(wrapper);
-
-        return friends.stream()
-                .map(Friend::getFriendId)
-                .collect(Collectors.toList());
+        return friendMapper.selectList(new QueryWrapper<Friend>().eq("user_id", userId).eq("status", 1))
+                .stream().map(Friend::getFriendId).collect(Collectors.toList());
     }
-
 }

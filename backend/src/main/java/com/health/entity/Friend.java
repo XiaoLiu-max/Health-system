@@ -9,6 +9,10 @@ public class Friend {
     private Long friendId;
     private String remark;
     private Integer status;
+    /**
+     * 拉黑发起标记：1=我主动拉黑对方，0=对方拉黑我，null=正常
+     */
+    private Integer blackInitiator;
     public Friend() {}
 
     public Friend(Long  id, Long userId, Long friendId) {
@@ -55,5 +59,13 @@ public class Friend {
 
     public void setRemark(String remark){
         this.remark=remark;
+    }
+
+    public Integer getBlackInitiator() {
+        return blackInitiator;
+    }
+
+    public void setBlackInitiator(Integer blackInitiator) {
+        this.blackInitiator=blackInitiator;
     }
 }

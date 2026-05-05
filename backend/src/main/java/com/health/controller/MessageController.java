@@ -57,8 +57,6 @@ public class MessageController {
         Map<String, Object> map = new HashMap<>();
         try {
             Long userId = UserContext.getUserId();
-            // ✅ 改成你真实存在的方法（统一发送健康提醒）
-            // 正确（3个参数）
             messageService.sendHealthWarn(userId, content, "请关注您的健康状态");
             map.put("code", 200);
             map.put("msg", "已给自己发送【健康异常】消息");
@@ -75,7 +73,6 @@ public class MessageController {
         Map<String, Object> map = new HashMap<>();
         try {
             Long userId = UserContext.getUserId();
-            // ✅ 这个方法你是有的，正常保留
             messageServices.sendAbnormalToFriend(userId, friendId, content);
             map.put("code", 200);
             map.put("msg", "已给好友发送【健康异常】消息");
@@ -92,7 +89,6 @@ public class MessageController {
         Map<String, Object> map = new HashMap<>();
         try {
             Long userId = UserContext.getUserId();
-            // ✅ 用你真实存在的 sendHealthWarn
             messageService.sendHealthWarn(userId, "健康报告已生成", "请及时查看您的健康数据");
             map.put("code", 200);
             map.put("msg", "已给自己发送【健康报告】消息");
@@ -109,7 +105,6 @@ public class MessageController {
         Map<String, Object> map = new HashMap<>();
         try {
             Long userId = UserContext.getUserId();
-            // ✅ 调用你真实存在的【周报】方法（测试用，不影响业务）
             messageServices.sendWeekReportToFriend(userId, friendId, url);
             map.put("code", 200);
             map.put("msg", "已给好友发送【健康报告】");
@@ -126,7 +121,6 @@ public class MessageController {
         Map<String, Object> map = new HashMap<>();
         try {
             Long userId = UserContext.getUserId();
-            // 调用你已有的月报发送方法
             messageServices.sendMonthReportToFriend(userId, friendId, url);
             map.put("code", 200);
             map.put("msg", "已给好友发送【月度健康报告】");
@@ -179,6 +173,28 @@ public class MessageController {
             messageServices.sendFriendApplyMsg(fromUid, toUid, content);
             map.put("code", 200);
             map.put("msg", "好友申请消息发送成功");
+        } catch (Exception e) {
+            map.put("code", 500);
+            map.put("msg", e.getMessage());
+        }
+        return map;
+    }
+
+
+    @PostMapping("/recall/ultimate")
+    public Map<String, Object> recallUltimate() {
+        Map<String, Object> map = new HashMap<>();
+        try {
+            // 修复后的这一行
+            Long uid = UserContext.getUserId();
+            boolean ok = messageServices.recallLatestSelfChatMsg(uid);
+            if (ok) {
+                map.put("code", 200);
+                map.put("msg", "撤回成功");
+            } else {
+                map.put("code", 400);
+                map.put("msg", "撤回失败");
+            }
         } catch (Exception e) {
             map.put("code", 500);
             map.put("msg", e.getMessage());

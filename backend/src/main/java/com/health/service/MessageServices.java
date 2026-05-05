@@ -23,7 +23,13 @@ public class MessageServices {
     // ====================== 1. 查询当前用户所有消息 ======================
     public List<Message> getMyMessage(Long userId) {
         QueryWrapper<Message> wrapper = new QueryWrapper<>();
-        wrapper.eq("to_uid", userId);
+        // ✅ 核心逻辑：
+        // 1. 私聊消息(type=2)：我发的 OR 发给我的
+        // 2. 系统通知(type≠2)：只查发给我的(to_uid=userId)，不查我发出去的！
+        wrapper.and(w ->
+                w.eq("to_uid", userId)
+                        .or(ww -> ww.eq("from_uid", userId).eq("type", 2))
+        );
         wrapper.orderByDesc("create_time");
         return messageMapper.selectList(wrapper);
     }
@@ -90,8 +96,11 @@ public class MessageServices {
 
 
 
+
     // ====================== 给好友发：周报   ======================
     public void sendWeekReportToFriend(Long userId, Long friendId, String url) {
+
+
         User user = userService.getById(userId);
         String username = user.getUsername() != null ? user.getUsername() : "好友";
 
@@ -108,6 +117,8 @@ public class MessageServices {
 
     // ====================== 给好友发：月报 ======================
     public void sendMonthReportToFriend(Long userId, Long friendId, String url) {
+
+
         User user = userService.getById(userId);
         String username = user.getUsername() != null ? user.getUsername() : "好友";
 
@@ -124,6 +135,7 @@ public class MessageServices {
 
     // 4. 自动给好友发异常
     public void sendAbnormalToFriend(Long userId, Long friendId, String content) {
+
         // 获取用户真实名字
         User user = userService.getById(userId);
         String username = user.getUsername() != null ? user.getUsername() : "你的好友";
@@ -131,7 +143,6 @@ public class MessageServices {
         Message msg = new Message();
         msg.setFromUid(userId);
         msg.setToUid(friendId);
-        // 最终效果：【好友健康异常】张三 血压偏高
         msg.setContent("【好友健康异常】" + username + " 健康数据异常：" + content);
         msg.setType(4);
         msg.setIsRead(0);
@@ -140,4 +151,16 @@ public class MessageServices {
     }
 
 
+
+    public boolean recallLatestSelfChatMsg(Long currentUserId) {
+        Message msg = messageMapper.selectLatestSelfChatMsg(currentUserId);
+        if (msg == null) {
+            System.out.println("【撤回失败】没有找到可撤回的消息");
+            return false;
+        }
+        msg.setIsRecall(1);
+        msg.setRecallTime(java.time.LocalDateTime.now());
+        int rows = messageMapper.updateById(msg);
+        return rows > 0;
+    }
 }

@@ -15,6 +15,9 @@ public class Message {
     private Integer type;
     private Integer isRead;
     private LocalDateTime createTime;
+    private Integer isRecall;
+    private LocalDateTime recallTime;
+
     public Message() {}
 
     // ====================== Getter & Setter ======================
@@ -72,5 +75,18 @@ public class Message {
     }
     public void setCreateTime(LocalDateTime createTime) {
         this.createTime = createTime;
+    }
+
+    public Integer getIsRecall() {
+        return isRecall;
+    }
+    public void setIsRecall(Integer isRecall) {
+        this.isRecall = isRecall;
+    }
+    public LocalDateTime getRecallTime() {
+        return recallTime;
+    }
+    public void setRecallTime(LocalDateTime recallTime) {
+        this.recallTime = recallTime;
     }
 }

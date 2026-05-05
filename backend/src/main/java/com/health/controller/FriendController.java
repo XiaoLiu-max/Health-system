@@ -88,6 +88,20 @@ public class FriendController {
         return map;
     }
 
+    // 获取拉黑类型：0正常 1我拉黑对方 2对方拉黑我
+    @GetMapping("/blockType")
+    public Map<String, Object> getBlockType(Long friendId) {
+        Map<String, Object> map = new HashMap<>();
+        try {
+            map.put("code", 200);
+            map.put("data", friendService.getBlockType(friendId));
+        } catch (Exception e) {
+            map.put("code", 500);
+            map.put("msg", e.getMessage());
+        }
+        return map;
+    }
+
     // 判断是否为好友
     @GetMapping("/isFriend")
     public Map<String, Object> isFriend(Long friendId) {
