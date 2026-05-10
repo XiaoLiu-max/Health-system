@@ -63,21 +63,18 @@
       <!-- 右侧内容区 -->
       <div class="content-right">
         <div v-if="activeType === 'system'" class="notice-list">
-          <!-- 🔥 这里加了 is-warning 判断异常消息 -->
+          <!-- 只修改这里：只有 type=4 变红 -->
           <div
             v-for="item in systemMessages"
             :key="item.id"
             class="notice-item"
-            :class="{
-              'is-warning': item.type === 4,
-              'apply-notice': item.type === 1,
-            }"
+            :class="{ 'is-warning': item.type === 4 || item.type === null }"
             @click="handleNoticeClick(item)"
           >
             <div class="notice-title">
               {{ item.content }}
               <span v-if="item.type === 1" class="apply-tag">好友申请</span>
-              <span v-if="item.type === 4" class="warning-tag">异常提醒</span>
+              <span v-if="item.type === 4 || item.type === null" class="warning-tag">异常提醒</span>
               <span
                 v-if="item.type === 1"
                 class="status-tag"
@@ -680,16 +677,12 @@ const handleRecall = async (msgId: string) => {
   background: #f5f5f5;
 }
 
-/* 🔥 异常提醒 → 只让 type=3 变红 */
-.notice-item.is-warning {
+/* 🔥 修复：穿透 scoped 强制生效，只有异常变红 */
+:deep(.notice-item.is-warning) {
   background: #fff1f0 !important;
   border-left: 4px solid #f56c6c !important;
 }
 
-/* 好友申请通知 */
-.apply-notice {
-  background: #fff7e6;
-}
 .apply-tag {
   margin-left: 8px;
   font-size: 12px;

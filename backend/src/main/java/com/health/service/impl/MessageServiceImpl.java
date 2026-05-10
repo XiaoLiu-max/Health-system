@@ -25,6 +25,7 @@ public class MessageServiceImpl implements MessageService {
         message.setIsRead(0);
         message.setCreateTime(LocalDateTime.now());
 
+        message.setType(4);
         messageMapper.insert(message);
         System.out.println("✅ 系统消息发送成功：" + fullContent);
     }
