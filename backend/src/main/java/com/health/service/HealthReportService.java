@@ -3,6 +3,8 @@ package com.health.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.health.entity.HealthReport;
 
+import java.time.LocalDate;
+
 public interface HealthReportService extends IService<HealthReport> {
 
     // 自动生成周报
@@ -17,4 +19,13 @@ public interface HealthReportService extends IService<HealthReport> {
     // ========== 新增：查询用户最新月报 ==========
     HealthReport getLatestMonthReport(Long userId);
 
+    HealthReport getReportByDate(Long userId, Integer type, LocalDate date);
+
+//    void generateSpecifiedWeekReport(LocalDate anyDate);
+//
+//    void generateSpecifiedMonthReport(LocalDate anyDate);
+
+
+    void generateSpecifiedWeekReport(LocalDate anyDate, Long userId);
+    void generateSpecifiedMonthReport(LocalDate anyDate, Long userId);
 }

@@ -13,4 +13,7 @@ public interface MessageMapper extends BaseMapper<Message> {
     @Select("SELECT * FROM message WHERE from_uid = #{currentUserId} AND type = 2 AND is_recall = 0 ORDER BY create_time DESC LIMIT 1")
     Message selectLatestSelfChatMsg(@Param("currentUserId") Long currentUserId);
 
+    @Select("SELECT COUNT(*) FROM message WHERE to_uid = #{toUid} AND is_read = 0")
+    int countUnread(@Param("toUid") Long toUid);
+
 }

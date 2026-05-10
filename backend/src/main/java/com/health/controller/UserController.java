@@ -161,8 +161,20 @@ public class UserController {
     private FriendOnlineService friendOnlineService;
 
     // 注册接口（User实体本来就匹配，保持不动）
+//    @PostMapping("/register")
+//    public Result register(@RequestBody User user) {
+//        return userService.register(user);
+//    }
+
     @PostMapping("/register")
     public Result register(@RequestBody User user) {
+        // 🔥 🔥 🔥 新增：检查用户名是否重复
+        User existUser = userService.getByUsername(user.getUsername());
+        if (existUser != null) {
+            return Result.fail("用户名已存在，请更换一个！");
+        }
+
+        // 原有逻辑不变
         return userService.register(user);
     }
 
@@ -276,6 +288,13 @@ public class UserController {
     public Result isUserExist(@PathVariable Long userId) {
         boolean exist = userService.isUserExist(userId);
         return Result.success(exist);
+    }
+
+    // 检查用户名是否存在
+    @GetMapping("/checkUsername")
+    public Result checkUsername(@RequestParam String username) {
+        User exist = userService.getByUsername(username);
+        return Result.success(exist != null);
     }
 
 }

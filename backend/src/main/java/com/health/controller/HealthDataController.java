@@ -37,10 +37,22 @@ public class HealthDataController {
     }
 
     // ===================== 2. 保存当天健康数据 =====================
+//    @PostMapping("/save")
+//    public Result save(HttpServletRequest request, @RequestBody HealthData data) {
+//        Long userId = JwtUtil.getUserId(request.getHeader("token"));
+//        healthDataService.saveDayData(data, userId, LocalDate.now());
+//        return Result.success("健康数据保存成功");
+//    }
+
     @PostMapping("/save")
     public Result save(HttpServletRequest request, @RequestBody HealthData data) {
         Long userId = JwtUtil.getUserId(request.getHeader("token"));
-        healthDataService.saveDayData(data, userId, LocalDate.now());
+        // 优先用前端传过来的日期，没传再用当天
+        LocalDate recordDate = data.getRecordDate() != null
+                ? data.getRecordDate()
+                : LocalDate.now();
+
+        healthDataService.saveDayData(data, userId, recordDate);
         return Result.success("健康数据保存成功");
     }
 
@@ -95,4 +107,78 @@ public class HealthDataController {
         HealthReport monthReport = healthReportService.getLatestMonthReport(userId);
         return Result.success(monthReport);
     }
+
+    @GetMapping("/report/by-date")
+    public Result getReportByDate(
+            HttpServletRequest request,
+            @RequestParam Integer type,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
+        Long userId = JwtUtil.getUserId(request.getHeader("token"));
+        HealthReport report = healthReportService.getReportByDate(userId, type, date);
+        return Result.success(report);
+    }
+
+    // 直接写在这里！已经登录，一定能访问！
+//    @GetMapping("/genMyWeekReport")
+//    public Result genMyWeekReport(
+//            @RequestParam String date,
+//            HttpServletRequest request) {
+//
+//        // 获取当前登录用户ID
+//        Long userId = JwtUtil.getUserId(request.getHeader("token"));
+//
+//        // 生成指定周的周报
+//        LocalDate localDate = LocalDate.parse(date);
+//        healthReportService.generateSpecifiedWeekReport(localDate);
+//
+//        return Result.success("✅ 你的周报生成成功！");
+//    }
+//
+//    @GetMapping("/genMyMonthReport")
+//    public Result genMyMonthReport(
+//            @RequestParam String date,
+//            HttpServletRequest request) {
+//        Long userId = JwtUtil.getUserId(request.getHeader("token"));
+//        LocalDate localDate = LocalDate.parse(date);
+//        healthReportService.generateSpecifiedMonthReport(localDate);
+//        return Result.success("✅ 月报生成成功！");
+//    }
+
+    @GetMapping("/genMyWeekReport")
+    public Result genMyWeekReport(
+            @RequestParam String date,
+            HttpServletRequest request) {
+
+        Long userId = JwtUtil.getUserId(request.getHeader("token"));
+        LocalDate localDate = LocalDate.parse(date);
+
+        // 🔥 只给自己生成
+        healthReportService.generateSpecifiedWeekReport(localDate, userId);
+
+        return Result.success("✅ 你的周报生成成功！");
+    }
+
+    @GetMapping("/genMyMonthReport")
+    public Result genMyMonthReport(
+            @RequestParam String date,
+            HttpServletRequest request) {
+
+        Long userId = JwtUtil.getUserId(request.getHeader("token"));
+        LocalDate localDate = LocalDate.parse(date);
+
+        // 🔥 只给自己生成
+        healthReportService.generateSpecifiedMonthReport(localDate, userId);
+
+        return Result.success("✅ 月报生成成功！");
+    }
+
+    @GetMapping("/data/get")
+    public Result getDataByDate(
+            HttpServletRequest request,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
+        Long userId = JwtUtil.getUserId(request.getHeader("token"));
+        HealthData data = healthDataService.getDataByDate(userId, date);
+        return Result.success(data);
+    }
+
 }

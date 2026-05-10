@@ -1,5 +1,6 @@
 package com.health.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import java.time.LocalDateTime;
@@ -13,6 +14,7 @@ public class Message {
     private String content;
     private String url;
     private Integer type;
+    @TableField("is_read")
     private Integer isRead;
     private LocalDateTime createTime;
     private Integer isRecall;

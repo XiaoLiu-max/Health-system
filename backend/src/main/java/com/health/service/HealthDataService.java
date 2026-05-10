@@ -19,4 +19,6 @@ public interface HealthDataService extends IService<HealthData> {
     // ========== 新增：根据时间区间查询折线图数据 ==========
     List<HealthData> getChartDataByDate(Long userId, LocalDate start, LocalDate end);
 
+    HealthData getDataByDate(Long userId, LocalDate date);
+
 }

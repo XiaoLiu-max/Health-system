@@ -1,6 +1,6 @@
 package com.health.service;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.health.entity.Remind;
 import com.health.mapper.RemindMapper;
 import org.springframework.stereotype.Service;
@@ -17,59 +17,55 @@ public class RemindService {
     @Resource
     private MessageServices messageServices;
 
-    // 新增提醒（默认待提醒 status=0）
     public boolean addRemind(Remind remind) {
         remind.setStatus(0);
         return remindMapper.insert(remind) > 0;
     }
 
-    // 查询全部（测试用）
     public List<Remind> findAll() {
         return remindMapper.selectList(null);
     }
 
-    // 根据ID查询（测试用）
     public Remind getById(Long id) {
         return remindMapper.selectById(id);
     }
 
-    // 修改提醒
     public boolean updateRemind(Remind remind) {
         return remindMapper.updateById(remind) > 0;
     }
 
-    // 删除提醒（测试用）
     public boolean deleteById(Long id) {
         return remindMapper.deleteById(id) > 0;
     }
 
-    // ===================== 【改动 1】查询我的提醒（必须传 userId） =====================
     public List<Remind> getMyReminds(Long userId, Integer status) {
         LambdaQueryWrapper<Remind> wrapper = new LambdaQueryWrapper<>();
-
-        // 只查当前登录用户的提醒 → 最重要！
         wrapper.eq(Remind::getUserId, userId);
-
-        // 按状态筛选
         if (status != null) {
             wrapper.eq(Remind::getStatus, status);
         }
-        // 按提醒时间升序
         wrapper.orderByAsc(Remind::getRemindTime);
         return remindMapper.selectList(wrapper);
     }
 
-    // ===================== 手动关闭提醒 =====================
     public boolean closeRemind(Long id) {
         Remind remind = remindMapper.selectById(id);
-        if (remind == null) {
-            return false;
-        }
+        if (remind == null) return false;
         remind.setStatus(2);
         return remindMapper.updateById(remind) > 0;
     }
 
-    // ===================== 【改动 2】自动触发提醒（打印用户ID） =====================
+    // 重新打开提醒（把状态从 2 改回 0）
+    public boolean openRemind(Long id) {
+        Remind remind = remindMapper.selectById(id);
+        if (remind == null) return false;
+        // 只有已关闭状态才能重新打开
+        if (remind.getStatus() != 2) return false;
+        remind.setStatus(0);
+        return remindMapper.updateById(remind) > 0;
+    }
+
+    // 系统自动触发提醒（支持重复）
     public List<Remind> getNeedTriggerRemind() {
         LambdaQueryWrapper<Remind> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Remind::getStatus, 0);
@@ -78,22 +74,32 @@ public class RemindService {
         List<Remind> remindList = remindMapper.selectList(wrapper);
 
         for (Remind remind : remindList) {
-            System.out.println("======================================");
-            System.out.println("🔔 自动提醒触发！");
-            System.out.println("用户ID：" + remind.getUserId());  // 这里加了用户ID
-            System.out.println("内容：" + remind.getContent());
-            System.out.println("时间：" + remind.getRemindTime());
-            System.out.println("======================================");
+            System.out.println("🔔 自动提醒触发！用户ID：" + remind.getUserId());
+            messageServices.sendRemindMessage(remind.getUserId(), remind.getContent());
 
-            messageServices.sendRemindMessage(
-                    remind.getUserId(),
-                    remind.getContent()
-            );
-
-            remind.setStatus(1);
-            remindMapper.updateById(remind);
+            if (remind.getRepeatType() == null || remind.getRepeatType() == 0) {
+                remind.setStatus(1);
+                remindMapper.updateById(remind);
+            } else {
+                LocalDateTime nextTime = calculateNextRemindTime(remind.getRemindTime(), remind.getRepeatType());
+                remind.setRemindTime(nextTime);
+                remindMapper.updateById(remind);
+            }
         }
-
         return remindList;
+    }
+
+    private LocalDateTime calculateNextRemindTime(LocalDateTime currentTime, Integer repeatType) {
+        if (repeatType == 1) {
+            return currentTime.plusDays(1);
+        } else if (repeatType == 2) {
+            return currentTime.plusWeeks(1);
+        } else if (repeatType == 3) {
+            return currentTime.plusMonths(1);
+        } else if (repeatType == 4) {
+            return currentTime.plusYears(1);
+        } else {
+            return currentTime;
+        }
     }
 }

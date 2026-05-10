@@ -11,6 +11,8 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.health.service.FriendService;
+
 @Service
 public class MessageServices {
 
@@ -19,6 +21,9 @@ public class MessageServices {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private FriendService friendService;
 
     // ====================== 1. 查询当前用户所有消息 ======================
     public List<Message> getMyMessage(Long userId) {
@@ -40,6 +45,34 @@ public class MessageServices {
         if (message != null) {
             message.setIsRead(1);
             messageMapper.updateById(message);
+        }
+    }
+
+
+    // ====================== 🔥 新增：统计当前用户所有未读消息（全局角标用） ======================
+    public Long countUnread(Long userId) {
+        QueryWrapper<Message> wrapper = new QueryWrapper<>();
+        wrapper.eq("to_uid", userId);  // 发给我的
+        wrapper.eq("is_read", 0);      // 未读
+        return messageMapper.selectCount(wrapper);
+    }
+
+    // ====================== 🔥 新增：标记和某个人的所有聊天为已读 ======================
+    public void markAllReadFromUser(Long userId, Long fromUid) {
+//        QueryWrapper<Message> wrapper = new QueryWrapper<>();
+//        wrapper.eq("to_uid", userId);
+//        wrapper.eq("from_uid", fromUid);
+//        wrapper.eq("is_read", 0);
+        QueryWrapper<Message> wrapper = new QueryWrapper<>();
+        wrapper.eq("to_uid", userId);
+        wrapper.eq("from_uid", fromUid);
+        wrapper.eq("type", 2);
+        wrapper.eq("is_read", 0);
+
+        List<Message> list = messageMapper.selectList(wrapper);
+        for (Message msg : list) {
+            msg.setIsRead(1);
+            messageMapper.updateById(msg);
         }
     }
 
@@ -163,4 +196,32 @@ public class MessageServices {
         int rows = messageMapper.updateById(msg);
         return rows > 0;
     }
+
+    // ====================== 【单个好友未读数量】会话列表角标用 ======================
+    public long countUnreadByFriend(Long userId, Long friendId) {
+        QueryWrapper<Message> wrapper = new QueryWrapper<>();
+        wrapper.eq("to_uid", userId);
+        wrapper.eq("from_uid", friendId);
+        wrapper.eq("is_read", 0);
+        wrapper.eq("type", 2); // 只算私聊，不算系统消息
+        return messageMapper.selectCount(wrapper);
+    }
+
+    // ====================== 【打开聊天 → 清空该好友角标】 ======================
+    public void clearUserUnread(Long userId, Long friendId) {
+        markAllReadFromUser(userId, friendId);
+    }
+
+    // 🔥 新增：健康异常 → 自动发给所有好友
+    public void pushAbnormalToAllFriends(Long userId, String content) {
+        // 1. 获取当前用户的所有正常好友 ID
+        List<Long> friendIds = friendService.getFriendIdsByUserId(userId);
+
+        // 2. 循环发给每个好友
+        for (Long friendId : friendIds) {
+            sendAbnormalToFriend(userId, friendId, content);
+        }
+    }
+
+
 }

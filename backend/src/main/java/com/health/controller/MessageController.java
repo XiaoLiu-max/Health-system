@@ -3,10 +3,7 @@ package com.health.controller;
 import com.health.service.MessageService;
 import com.health.service.MessageServices;
 import com.health.utils.UserContext;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
@@ -37,8 +34,22 @@ public class MessageController {
         return map;
     }
 
+//    @PostMapping("/read")
+//    public Map<String, Object> readMessage(Long msgId) {
+//        Map<String, Object> map = new HashMap<>();
+//        try {
+//            messageServices.readMessage(msgId);
+//            map.put("code", 200);
+//            map.put("msg", "已读成功");
+//        } catch (Exception e) {
+//            map.put("code", 500);
+//            map.put("msg", e.getMessage());
+//        }
+//        return map;
+//    }
+
     @PostMapping("/read")
-    public Map<String, Object> readMessage(Long msgId) {
+    public Map<String, Object> readMessage(@RequestParam Long msgId) {
         Map<String, Object> map = new HashMap<>();
         try {
             messageServices.readMessage(msgId);
@@ -195,6 +206,67 @@ public class MessageController {
                 map.put("code", 400);
                 map.put("msg", "撤回失败");
             }
+        } catch (Exception e) {
+            map.put("code", 500);
+            map.put("msg", e.getMessage());
+        }
+        return map;
+    }
+
+    @GetMapping("/unread/count")
+    public Map<String, Object> getUnreadCount() {
+        Map<String, Object> map = new HashMap<>();
+        try {
+            Long userId = UserContext.getUserId();
+            long count = messageServices.countUnread(userId);
+            map.put("code", 200);
+            map.put("data", count);
+        } catch (Exception e) {
+            map.put("code", 500);
+            map.put("msg", e.getMessage());
+        }
+        return map;
+    }
+
+    @PostMapping("/read/user/{fromUid}")
+    public Map<String, Object> readAllFromUser(@PathVariable Long fromUid) {
+        Map<String, Object> map = new HashMap<>();
+        try {
+            Long userId = UserContext.getUserId();
+            messageServices.markAllReadFromUser(userId, fromUid);
+            map.put("code", 200);
+            map.put("msg", "全部已读");
+        } catch (Exception e) {
+            map.put("code", 500);
+            map.put("msg", e.getMessage());
+        }
+        return map;
+    }
+
+    // ===================== 【单个好友未读数量】会话列表角标 =====================
+//    @GetMapping("/unread/friend")
+//    public Map<String, Object> getUnreadByFriend(Long friendId) {
+//        Map<String, Object> map = new HashMap<>();
+//        try {
+//            Long userId = UserContext.getUserId();
+//            long count = messageServices.countUnreadByFriend(userId, friendId);
+//            map.put("code", 200);
+//            map.put("data", count);
+//        } catch (Exception e) {
+//            map.put("code", 500);
+//            map.put("msg", e.getMessage());
+//        }
+//        return map;
+//    }
+
+    @GetMapping("/unread/friend")
+    public Map<String, Object> getUnreadByFriend(@RequestParam Long friendId) {
+        Map<String, Object> map = new HashMap<>();
+        try {
+            Long userId = UserContext.getUserId();
+            long count = messageServices.countUnreadByFriend(userId, friendId);
+            map.put("code", 200);
+            map.put("data", count);
         } catch (Exception e) {
             map.put("code", 500);
             map.put("msg", e.getMessage());

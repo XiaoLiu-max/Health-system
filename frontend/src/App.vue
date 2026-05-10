@@ -1,14 +1,3 @@
-<!-- <script setup lang="ts"></script>
-
-<template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
-</template>
-
-<style scoped></style> -->
 <template>
   <el-container style="height: 100vh; border: 1px solid #eee">
     <!-- 侧边栏 -->
@@ -25,18 +14,18 @@
           <el-icon><HomeFilled /></el-icon>
           <span>系统首页</span>
         </el-menu-item>
-        <el-sub-menu index="/data">
-          <template #title>
-            <el-icon><DataLine /></el-icon>
-            <span>健康数据</span>
-          </template>
-          <el-menu-item index="/data/record">数据记录</el-menu-item>
-          <el-menu-item index="/data/analysis">数据分析</el-menu-item>
-        </el-sub-menu>
-        <el-menu-item index="/plan">
-          <el-icon><Calendar /></el-icon>
-          <span>健康计划</span>
+
+        <!-- 消息中心：已删除角标，不再显示未读数字 -->
+        <el-menu-item index="/message">
+          <el-icon><ChatDotRound /></el-icon>
+          <span>消息中心</span>
         </el-menu-item>
+
+        <el-menu-item index="/aiChat">
+          <el-icon><ChatDotRound /></el-icon>
+          <span>AI 健康助手</span>
+        </el-menu-item>
+
         <el-menu-item index="/setting">
           <el-icon><Setting /></el-icon>
           <span>系统设置</span>
@@ -45,11 +34,38 @@
     </el-aside>
 
     <el-container>
-      <!-- 顶部导航栏 -->
-      <el-header style="background-color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid #eee">
-        <h1 style="margin: 0; font-size: 20px; color: #2c3e50">健康管理系统</h1>
+      <el-header
+        style="
+          background-color: #fff;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 20px;
+          border-bottom: 1px solid #eee;
+        "
+      >
+        <div style="display: flex; align-items: center; gap: 10px">
+          <img
+            src="@/assets/logo.png"
+            alt="Logo"
+            style="
+              width: 36px;
+              height: 36px;
+              border-radius: 50%;
+              background-color: #fff;
+              object-fit: contain;
+            "
+          />
+          <h1 style="margin: 0; font-size: 20px; color: #2c3e50">健康管理系统</h1>
+        </div>
+
         <div class="header-right">
-          <el-avatar :size="40" :src="userAvatar" style="cursor: pointer" @click="showUserInfo = !showUserInfo" />
+          <el-avatar
+            :size="40"
+            :src="userAvatar"
+            style="cursor: pointer"
+            @click="showUserInfo = !showUserInfo"
+          />
           <el-popover
             v-model:visible="showUserInfo"
             placement="bottom-end"
@@ -67,7 +83,7 @@
         </div>
       </el-header>
 
-      <!-- 主内容区 -->
+      <!-- 内容区 -->
       <el-main style="background-color: #f5f7fa; padding: 20px">
         <router-view />
       </el-main>
@@ -76,15 +92,59 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { HomeFilled, DataLine, Calendar, Setting } from '@element-plus/icons-vue'
+import { HomeFilled, Setting, ChatDotRound } from '@element-plus/icons-vue'
+import axios from 'axios'
+import request from './utils/request'
 
 const router = useRouter()
 const activeMenu = ref('/home')
 const showUserInfo = ref(false)
 const userAvatar = ref('https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png')
+
+// 消息未读数（虽然保留了变量，但已经不渲染了，可删除）
+const unreadCount = ref(0)
+;(window as any).appUnread = unreadCount
+let timer: ReturnType<typeof setInterval> | null = null
+
+// 获取未读消息总数（虽然保留了函数，但角标已删除，可删除）
+const getUnreadCount = async () => {
+  try {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      unreadCount.value = 0
+      if ((window as any).appUnread) {
+        ;(window as any).appUnread.value = 0
+      }
+      return
+    }
+    const res = await request.get('/message/unread/count')
+    unreadCount.value = res.data || 0
+    if ((window as any).appUnread) {
+      ;(window as any).appUnread.value = res.data || 0
+    }
+  } catch (err) {
+    console.log('获取未读消息失败', err)
+    unreadCount.value = 0
+    if ((window as any).appUnread) {
+      ;(window as any).appUnread.value = 0
+    }
+  }
+}
+
+onMounted(() => {
+  const token = localStorage.getItem('token')
+  if (token && router.currentRoute.value.path !== '/login') {
+    getUnreadCount()
+    timer = setInterval(getUnreadCount, 5000)
+  }
+})
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+})
 
 const handleMenuSelect = (index: string) => {
   activeMenu.value = index
@@ -96,8 +156,12 @@ const goToProfile = () => {
   router.push('/setting/profile')
 }
 
-const logout = () => {
+const logout = async () => {
   showUserInfo.value = false
+  try {
+    await axios.post('/user/logout')
+  } catch (err) {}
+  localStorage.removeItem('token')
   ElMessage.success('已退出登录')
   router.push('/login')
 }

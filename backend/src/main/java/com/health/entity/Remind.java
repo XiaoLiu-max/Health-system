@@ -5,27 +5,32 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 
 import java.time.LocalDateTime;
 
 public class Remind {
-    // 字段
+
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
+
     private String content;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime remindTime;
+
     private Integer repeatType;
     private Integer status;
+
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
 
-    // 无参构造（必须有，Spring MVC 接收JSON需要）
     public Remind() {
     }
 
-    // 全参构造（Service里初始化测试数据用）
-    public Remind(Long id, String content, LocalDateTime remindTime, Integer repeatType, Integer status,Long userId) {
+    public Remind(Long id, String content, LocalDateTime remindTime, Integer repeatType, Integer status, Long userId) {
         this.id = id;
         this.content = content;
         this.remindTime = remindTime;
@@ -34,11 +39,12 @@ public class Remind {
         this.userId = userId;
     }
 
-    // 所有字段的 Getter 和 Setter
-    public Long getUserId() {return  userId;}
+    public Long getUserId() {
+        return userId;
+    }
 
-    public void setUserId(Long id) {
-        this.userId = id;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public Long getId() {

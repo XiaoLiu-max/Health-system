@@ -11,17 +11,31 @@
 
 // app.mount('#app')
 
-
 // src/main.ts
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import ElementPlus from 'element-plus'
-// ✅ 路径完全正确，配置修复后 TS 直接识别
 import 'element-plus/dist/index.css'
 
+import axios from 'axios'
+
 const app = createApp(App)
+
+axios.defaults.baseURL = 'http://localhost:8080'
+
+// ===================== 我只加了这一段 =====================
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers['token'] = token
+  }
+  return config
+})
+// =========================================================
+
+app.config.globalProperties.$axios = axios
 
 app.use(createPinia())
 app.use(router)
