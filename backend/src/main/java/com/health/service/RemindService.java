@@ -17,7 +17,18 @@ public class RemindService {
     @Resource
     private MessageServices messageServices;
 
+//    public boolean addRemind(Remind remind) {
+//        remind.setStatus(0);
+//        return remindMapper.insert(remind) > 0;
+//    }
+
+
     public boolean addRemind(Remind remind) {
+        // 如果提醒时间 早于 当前时间 → 禁止创建
+        if (remind.getRemindTime() == null || remind.getRemindTime().isBefore(LocalDateTime.now())) {
+            System.out.println("❌ 时间非法，提醒时间已过期，无法创建");
+            return false;
+        }
         remind.setStatus(0);
         return remindMapper.insert(remind) > 0;
     }
